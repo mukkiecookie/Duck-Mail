@@ -12,9 +12,9 @@ function App() {
 
   const fetchLetters = useCallback(async () => {
     if (!me) return;
-    const res = await fetch(`${API_URL}/letters`);
+    const res = await fetch(`${API_URL}/letters?viewer=${me}`);
     const data = await res.json();
-    setLetters(data.filter((l) => l.sender === me || l.receiver === me));
+    setLetters(data);
   }, [me]);
 
   useEffect(() => {
@@ -79,7 +79,9 @@ function App() {
             }}
           >
             <strong>{l.sender === me ? "You" : l.sender} → {l.receiver === me ? "You" : l.receiver}</strong>
-            <p style={{ margin: "4px 0" }}>{l.content}</p>
+            <p style={{ margin: "4px 0" }}>
+              {l.content !== null ? l.content : "✉️ (arriving...)"}
+            </p>
             <small>{l.status}</small>
           </div>
         ))}

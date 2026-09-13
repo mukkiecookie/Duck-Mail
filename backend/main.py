@@ -74,20 +74,29 @@ def send_letter(sender: str, receiver: str, content: str):
     return {"id": letter_id, "delay_seconds": delay, "status": "sent"}
 
 @app.get("/letters")
-def get_letters():
+def get_letters(viewer: str):
     conn = sqlite3.connect(DB_PATH)
-    rows = conn.execute("SELECT id, sender, receiver, content, deliver_at FROM letters ORDER BY id").fetchall()
+    rows = conn.execute(
+        "SELECT id, sender, receiver, content, deliver_at FROM letters WHERE sender = ? OR receiver = ? ORDER BY id",
+        (viewer, viewer),
+    ).fetchall()
     conn.close()
 
     now = time.time()
     result = []
     for id_, sender, receiver, content, deliver_at in rows:
-        status = "Delivered" if now >= deliver_at else "In Transit"
+        delivered = now >= deliver_at
+        status = "Delivered" if delivered else "In Transit"
+
+        # Hide content from the receiver until it's actually delivered.
+        # The sender can always see what they wrote.
+        visible_content = content if (delivered or sender == viewer) else None
+
         result.append({
             "id": id_,
             "sender": sender,
             "receiver": receiver,
-            "content": content,
+            "content": visible_content,
             "status": status,
         })
     return result

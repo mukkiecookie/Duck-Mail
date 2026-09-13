@@ -1,8 +1,16 @@
 from fastapi import FastAPI
 import letter_engine
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # for development only — restrict this later
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 scheduler = letter_engine.DeliveryScheduler()
 traffic = letter_engine.TrafficService()

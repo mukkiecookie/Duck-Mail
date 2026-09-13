@@ -1,7 +1,10 @@
-.venv/
-build/
+backend/.venv/
+backend/build/
 *.pyd
 *.exe
 __pycache__/
 *.o
 .vscode/
+
+frontend/node_modules/
+frontend/build/

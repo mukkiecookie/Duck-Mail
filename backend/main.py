@@ -86,17 +86,15 @@ def get_letters(viewer: str):
     result = []
     for id_, sender, receiver, content, deliver_at in rows:
         delivered = now >= deliver_at
-        status = "Delivered" if delivered else "In Transit"
 
-        # Hide content from the receiver until it's actually delivered.
-        # The sender can always see what they wrote.
-        visible_content = content if (delivered or sender == viewer) else None
-
-        result.append({
-            "id": id_,
-            "sender": sender,
-            "receiver": receiver,
-            "content": visible_content,
-            "status": status,
-        })
+        # Sender always sees their own sent letters (In Transit or Delivered).
+        # Receiver only sees a letter once it has actually arrived.
+        if sender == viewer or delivered:
+            result.append({
+                "id": id_,
+                "sender": sender,
+                "receiver": receiver,
+                "content": content,
+                "status": "Delivered" if delivered else "In Transit",
+            })
     return result

@@ -1,27 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 
 const API_URL = "https://letters-app-am1z.onrender.com";
-const USERS = ["Munkie", "Chandhini"]; // replace with your friend's actual name
+const USERS = ["Munkie", "Chandhini"];
 
 function App() {
-  const [me, setMe] = useState(USERS[0]);
+  const [me, setMe] = useState(() => localStorage.getItem("letterAppUser") || null);
   const [letters, setLetters] = useState([]);
   const [content, setContent] = useState("");
 
   const other = USERS.find((u) => u !== me);
 
-  // ...inside the component:
-const fetchLetters = useCallback(async () => {
-  const res = await fetch(`${API_URL}/letters`);
-  const data = await res.json();
-  setLetters(data.filter((l) => l.sender === me || l.receiver === me));
-}, [me]);
+  const fetchLetters = useCallback(async () => {
+    if (!me) return;
+    const res = await fetch(`${API_URL}/letters`);
+    const data = await res.json();
+    setLetters(data.filter((l) => l.sender === me || l.receiver === me));
+  }, [me]);
 
-useEffect(() => {
-  fetchLetters();
-  const interval = setInterval(fetchLetters, 2000);
-  return () => clearInterval(interval);
-}, [fetchLetters]);
+  useEffect(() => {
+    fetchLetters();
+    const interval = setInterval(fetchLetters, 2000);
+    return () => clearInterval(interval);
+  }, [fetchLetters]);
+
+  const chooseIdentity = (name) => {
+    localStorage.setItem("letterAppUser", name);
+    setMe(name);
+  };
 
   const sendLetter = async () => {
     if (!content.trim()) return;
@@ -31,18 +36,24 @@ useEffect(() => {
     fetchLetters();
   };
 
+  if (!me) {
+    return (
+      <div style={{ maxWidth: 400, margin: "80px auto", textAlign: "center", fontFamily: "sans-serif" }}>
+        <h2>Who are you?</h2>
+        <p>This only needs to be set once on this device.</p>
+        {USERS.map((u) => (
+          <button key={u} onClick={() => chooseIdentity(u)} style={{ margin: 8, padding: "10px 20px" }}>
+            {u}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 500, margin: "40px auto", fontFamily: "sans-serif" }}>
       <h2>Letter Delivery</h2>
-
-      <div style={{ marginBottom: 16 }}>
-        I am:{" "}
-        <select value={me} onChange={(e) => setMe(e.target.value)}>
-          {USERS.map((u) => (
-            <option key={u} value={u}>{u}</option>
-          ))}
-        </select>
-      </div>
+      <p style={{ color: "#888", marginTop: -10 }}>Signed in as {me}</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         <input

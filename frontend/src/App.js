@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-const API_URL = "https://YOUR-BACKEND-URL.onrender.com"; // we'll fill this in after deploying
-
+const API_URL = "https://letters-app-am1z.onrender.com";
 const USERS = ["Munkie", "Chandhini"]; // replace with your friend's actual name
 
 function App() {
@@ -11,17 +10,18 @@ function App() {
 
   const other = USERS.find((u) => u !== me);
 
-  const fetchLetters = async () => {
-    const res = await fetch(`${API_URL}/letters`);
-    const data = await res.json();
-    setLetters(data.filter((l) => l.sender === me || l.receiver === me));
-  };
+  // ...inside the component:
+const fetchLetters = useCallback(async () => {
+  const res = await fetch(`${API_URL}/letters`);
+  const data = await res.json();
+  setLetters(data.filter((l) => l.sender === me || l.receiver === me));
+}, [me]);
 
-  useEffect(() => {
-    fetchLetters();
-    const interval = setInterval(fetchLetters, 2000);
-    return () => clearInterval(interval);
-  }, [me]);
+useEffect(() => {
+  fetchLetters();
+  const interval = setInterval(fetchLetters, 2000);
+  return () => clearInterval(interval);
+}, [fetchLetters]);
 
   const sendLetter = async () => {
     if (!content.trim()) return;

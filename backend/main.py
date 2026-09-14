@@ -22,11 +22,12 @@ app.add_middleware(
 traffic = letter_engine.TrafficService()
 
 LOCATIONS = {
-    "Munkie": (28.6139, 77.2090),
-    "Chandhini": (28.5355, 77.3910),
+    "Munkie": (28.653035244938376, 77.18495744899086),
+    "Chandhini": (28.266865388908272, 77.0658879353592),
 }
 
 WALKING_SPEED_MPS = 1.4  # average human walking speed, ~5 km/h
+ROUTE_INEFFICIENCY_FACTOR = 1.35  # tuned to roughly match your real 12h walk
 PICKUP_DELAY_RANGE = (10, 45)  # seconds, simulates mail being collected from a dropbox
 
 DATABASE_URL = os.environ["DATABASE_URL"]
@@ -68,7 +69,7 @@ def get_walking_time_seconds(sender: str, receiver: str) -> int:
 
     lat1, lon1 = LOCATIONS[sender]
     lat2, lon2 = LOCATIONS[receiver]
-    distance_m = haversine_meters(lat1, lon1, lat2, lon2)
+    distance_m = haversine_meters(lat1, lon1, lat2, lon2) * ROUTE_INEFFICIENCY_FACTOR
     return int(distance_m / WALKING_SPEED_MPS)
 
 @app.post("/send")
@@ -113,11 +114,9 @@ def get_letters(viewer: str):
         picked_up = now >= picked_up_at
 
         if sender == viewer:
-            # Sender always sees their own letter's progress
             status = "Delivered" if delivered else ("In Transit" if picked_up else "Pending Pickup")
             result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": status})
         elif delivered:
-            # Receiver only sees it once it has actually arrived
             result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered"})
 
     return result

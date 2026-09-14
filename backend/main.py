@@ -28,7 +28,7 @@ LOCATIONS = {
 
 WALKING_SPEED_MPS = 1.4  # average human walking speed, ~5 km/h
 ROUTE_INEFFICIENCY_FACTOR = 1.35  # tuned to roughly match your real 12h walk
-PICKUP_DELAY_RANGE = (10, 45)  # seconds, simulates mail being collected from a dropbox
+PICKUP_DELAY_RANGE = (7200, 10800)  # seconds, simulates mail being collected from a dropbox
 
 DATABASE_URL = os.environ["DATABASE_URL"]
 

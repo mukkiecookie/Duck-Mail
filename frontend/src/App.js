@@ -74,7 +74,10 @@ function App() {
               padding: 10,
               marginBottom: 8,
               borderRadius: 8,
-              background: l.status === "Delivered" ? "#d4f7d4" : "#f7f0d4",
+              background: 
+                l.status === "Delivered" ? "#d4f7d4" :
+                l.status === "In Transit" ? "#f7f0d4" :
+                "#e0e0e0", // Pending Pickup
               textAlign: l.sender === me ? "right" : "left",
             }}
           >

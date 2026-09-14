@@ -3,3 +3,5 @@ uvicorn
 pybind11
 setuptools
 requests
+psycopg2-binary
+python-dotenv

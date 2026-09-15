@@ -94,7 +94,7 @@ function MapPanel({ me }) {
         style={{ position: "relative", width: "100%", height: "100%", cursor: "crosshair" }}
       >
         {mapConfig && (
-          <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
         )}
 
         {active && (

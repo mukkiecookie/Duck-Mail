@@ -1,39 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { useState } from "react";
+import ComposePage from "./pages/ComposePage";
+import HistoryPage from "./pages/HistoryPage";
+import MapPanel from "./components/MapPanel";
 
-const API_URL = "https://letters-app-am1z.onrender.com";
 const USERS = ["Munkie", "Chandhini"];
 
 function App() {
   const [me, setMe] = useState(() => localStorage.getItem("letterAppUser") || null);
-  const [letters, setLetters] = useState([]);
-  const [content, setContent] = useState("");
-
-  const other = USERS.find((u) => u !== me);
-
-  const fetchLetters = useCallback(async () => {
-    if (!me) return;
-    const res = await fetch(`${API_URL}/letters?viewer=${me}`);
-    const data = await res.json();
-    setLetters(data);
-  }, [me]);
-
-  useEffect(() => {
-    fetchLetters();
-    const interval = setInterval(fetchLetters, 2000);
-    return () => clearInterval(interval);
-  }, [fetchLetters]);
 
   const chooseIdentity = (name) => {
     localStorage.setItem("letterAppUser", name);
     setMe(name);
-  };
-
-  const sendLetter = async () => {
-    if (!content.trim()) return;
-    const params = new URLSearchParams({ sender: me, receiver: other, content });
-    await fetch(`${API_URL}/send?${params}`, { method: "POST" });
-    setContent("");
-    fetchLetters();
   };
 
   if (!me) {
@@ -50,46 +28,44 @@ function App() {
     );
   }
 
+  const other = USERS.find((u) => u !== me);
+
   return (
-    <div style={{ maxWidth: 500, margin: "40px auto", fontFamily: "sans-serif" }}>
-      <h2>Letter Delivery</h2>
-      <p style={{ color: "#888", marginTop: -10 }}>Signed in as {me}</p>
+    <BrowserRouter>
+      <div style={{ display: "flex", height: "100vh", width: "100vw", overflow: "hidden" }}>
+        {/* LEFT SIDE */}
+        <div style={{ width: "50%", height: "100%", display: "flex", flexDirection: "column", background: "#f0eee9" }}>
+          <nav style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "16px 24px", borderBottom: "2px solid #333",
+          }}>
+            <span style={{ fontWeight: "bold" }}>
+              <span style={{ color: "#e8b84b" }}>DUCK</span>MAIL
+            </span>
+            <div style={{ display: "flex", gap: 20 }}>
+              <NavLink to="/" end style={({ isActive }) => ({ textDecoration: isActive ? "underline" : "none" })}>
+                Typewriter
+              </NavLink>
+              <NavLink to="/history" style={({ isActive }) => ({ textDecoration: isActive ? "underline" : "none" })}>
+                History
+              </NavLink>
+            </div>
+          </nav>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        <input
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={`Write to ${other}...`}
-          style={{ flex: 1 }}
-          onKeyDown={(e) => e.key === "Enter" && sendLetter()}
-        />
-        <button onClick={sendLetter}>Send</button>
-      </div>
-
-      <div>
-        {letters.slice().reverse().map((l) => (
-          <div
-            key={l.id}
-            style={{
-              padding: 10,
-              marginBottom: 8,
-              borderRadius: 8,
-              background: 
-                l.status === "Delivered" ? "#d4f7d4" :
-                l.status === "In Transit" ? "#f7f0d4" :
-                "#e0e0e0", // Pending Pickup
-              textAlign: l.sender === me ? "right" : "left",
-            }}
-          >
-            <strong>{l.sender === me ? "You" : l.sender} → {l.receiver === me ? "You" : l.receiver}</strong>
-            <p style={{ margin: "4px 0" }}>
-              {l.content !== null ? l.content : "✉️ (arriving...)"}
-            </p>
-            <small>{l.status}</small>
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <Routes>
+              <Route path="/" element={<ComposePage me={me} other={other} />} />
+              <Route path="/history" element={<HistoryPage me={me} />} />
+            </Routes>
           </div>
-        ))}
+        </div>
+
+        {/* RIGHT SIDE - always the map */}
+        <div style={{ width: "50%", height: "100%" }}>
+          <MapPanel me={me} />
+        </div>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 

@@ -120,3 +120,52 @@ def get_letters(viewer: str):
             result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered"})
 
     return result
+
+@app.get("/track")
+def track_letters(viewer: str):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, sender, receiver, picked_up_at, deliver_at FROM letters WHERE sender = %s OR receiver = %s ORDER BY id",
+        (viewer, viewer),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    now = time.time()
+    result = []
+    for id_, sender, receiver, picked_up_at, deliver_at in rows:
+        if now >= deliver_at:
+            continue  # already delivered, nothing to track
+
+        if sender not in LOCATIONS or receiver not in LOCATIONS:
+            continue  # can't plot without coordinates
+
+        lat1, lon1 = LOCATIONS[sender]
+        lat2, lon2 = LOCATIONS[receiver]
+
+        if now < picked_up_at:
+            progress = 0.0
+            phase = "pending_pickup"
+        else:
+            total = deliver_at - picked_up_at
+            elapsed = now - picked_up_at
+            progress = max(0.0, min(1.0, elapsed / total)) if total > 0 else 1.0
+            phase = "in_transit"
+
+        current_lat = lat1 + (lat2 - lat1) * progress
+        current_lon = lon1 + (lon2 - lon1) * progress
+
+        result.append({
+            "id": id_,
+            "sender": sender,
+            "receiver": receiver,
+            "sender_coords": [lat1, lon1],
+            "receiver_coords": [lat2, lon2],
+            "current_coords": [current_lat, current_lon],
+            "progress": progress,
+            "phase": phase,
+        })
+
+    return result

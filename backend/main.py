@@ -22,7 +22,7 @@ app.add_middleware(
 traffic = letter_engine.TrafficService()
 
 LOCATIONS = {
-    "Munkie": (28.653035244938376, 77.18495744899086),
+    "Mukul": (28.653035244938376, 77.18495744899086),
     "Chandhini": (28.266865388908272, 77.0658879353592),
 }
 

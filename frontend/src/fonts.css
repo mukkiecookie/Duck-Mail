@@ -1,0 +1,31 @@
+@font-face {
+  font-family: "Minecraft";
+  src: url("./assets/fonts/Minecraft-Medium.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@keyframes reveal0 {
+  0%, 83.33% { opacity: 1; }
+  83.34%, 100% { opacity: 0; }
+}
+@keyframes reveal1 {
+  0%, 16.66% { opacity: 0; }
+  16.67%, 83.33% { opacity: 1; }
+  83.34%, 100% { opacity: 0; }
+}
+@keyframes reveal2 {
+  0%, 33.32% { opacity: 0; }
+  33.33%, 83.33% { opacity: 1; }
+  83.34%, 100% { opacity: 0; }
+}
+@keyframes reveal3 {
+  0%, 49.99% { opacity: 0; }
+  50%, 83.33% { opacity: 1; }
+  83.34%, 100% { opacity: 0; }
+}
+@keyframes reveal4 {
+  0%, 66.65% { opacity: 0; }
+  66.66%, 83.33% { opacity: 1; }
+  83.34%, 100% { opacity: 0; }
+}

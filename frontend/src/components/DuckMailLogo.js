@@ -1,0 +1,125 @@
+import { useState, useEffect, useRef } from "react";
+
+function DuckMailLogo({ height = "20vh", typing = false, typeSpeed = 240 }) {
+  const svgRef = useRef(null);
+  const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
+  const [blinking, setBlinking] = useState(false);
+  const [typedCount, setTypedCount] = useState(typing ? 0 : 7); // full word instantly if not typing
+
+  // Typing intro - only runs when typing=true
+  useEffect(() => {
+    if (!typing) return;
+
+    const letterCount = 7; // U, C, K, M, A, I, L
+    const holdTime = 1800;
+    const pauseTime = 500;
+    let timeouts = [];
+
+    const runCycle = () => {
+      setTypedCount(0);
+      for (let i = 1; i <= letterCount; i++) {
+        timeouts.push(setTimeout(() => setTypedCount(i), i * typeSpeed));
+      }
+      const totalTypeTime = letterCount * typeSpeed;
+      timeouts.push(setTimeout(() => setTypedCount(0), totalTypeTime + holdTime));
+      timeouts.push(setTimeout(runCycle, totalTypeTime + holdTime + pauseTime));
+    };
+
+    runCycle();
+    return () => timeouts.forEach(clearTimeout);
+  }, [typing, typeSpeed]);
+
+  // Blinking - always active
+  useEffect(() => {
+    let blinkTimer;
+    const scheduleBlink = () => {
+      const delay = 2000 + Math.random() * 4000;
+      blinkTimer = setTimeout(() => {
+        setBlinking(true);
+        setTimeout(() => setBlinking(false), 100);
+        scheduleBlink();
+      }, delay);
+    };
+    scheduleBlink();
+    return () => clearTimeout(blinkTimer);
+  }, []);
+
+  // Cursor-tracking eyes - always active
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const eyeCenterX = rect.left + rect.width * 0.06;
+      const eyeCenterY = rect.top + rect.height * 0.3;
+      const dx = e.clientX - eyeCenterX;
+      const dy = e.clientY - eyeCenterY;
+      const angle = Math.atan2(dy, dx);
+      const maxOffset = 3;
+      setEyeOffset({ x: Math.cos(angle) * maxOffset, y: Math.sin(angle) * maxOffset });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <svg
+      ref={svgRef}
+      viewBox="0 0 940 140"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ height, width: "auto" }}
+    >
+      <g style={{ opacity: typedCount >= 7 ? 1 : 0 }}>
+        <path d="M830.76 140V0H855.036V115.769H940V140H830.76Z" fill="black"/>
+      </g>
+      <g style={{ opacity: typedCount >= 6 ? 1 : 0 }}>
+        <path d="M766.026 140V115.769H778.164V18.8461H766.026V0H814.577V18.8461H802.439V115.769H814.577V140H766.026Z" fill="black"/>
+      </g>
+      <g style={{ opacity: typedCount >= 5 ? 1 : 0 }}>
+        <path d="M721.521 140V67.3077H660.832V140H636.557V18.8461H660.832V43.0769H721.521V18.8461H745.797V140H721.521ZM721.521 18.8461H660.832V0H721.521V18.8461Z" fill="black"/>
+      </g>
+      <g style={{ opacity: typedCount >= 4 ? 1 : 0 }}>
+        <path d="M593.4 140V43.0769H569.125V67.3077H544.849V43.0769H569.125V18.8461H593.4V0H617.676V140H593.4ZM496.298 140V0H520.574V18.8461H544.849V43.0769H520.574V140H496.298Z" fill="black"/>
+      </g>
+      <g style={{ opacity: typedCount >= 3 ? 1 : 0 }}>
+        <path d="M453.142 140V96.9231H474.72V140H453.142ZM388.407 140V0H409.986V53.8461H431.564V75.3846H453.142V96.9231H431.564V75.3846H409.986V140H388.407ZM431.564 53.8461V32.3077H453.142V53.8461H431.564ZM453.142 32.3077V0H474.72V32.3077H453.142Z" fill="#FFD500"/>
+      </g>
+      <g style={{ opacity: typedCount >= 2 ? 1 : 0 }}>
+        <path d="M269.727 140V118.462H334.462V96.9231H366.829V118.462H345.251V140H269.727ZM269.727 118.462H248.149V21.5385H269.727V118.462ZM334.462 43.0769V21.5385H269.727V0H345.251V21.5385H366.829V43.0769H334.462Z" fill="#FFD500"/>
+      </g>
+      <g style={{ opacity: typedCount >= 1 ? 1 : 0 }}>
+        <path d="M151.047 140V118.462H204.993V140H151.047ZM204.993 118.462V0H226.571V118.462H204.993ZM151.047 118.462H129.469V0H151.047V118.462Z" fill="#FFD500"/>
+      </g>
+      <path d="M21.5782 107.692L21.5784 0H97.1022V10.7692H107.891V96.9231H97.1022V10.7692H32.3675V96.9231H97.1022L97.102 107.692H21.5782Z" fill="black"/>
+      <path d="M97.1022 96.9231V10.7692H32.3675V96.9231H97.1022Z" fill="#FFD400"/>
+      <path d="M0 43.077H43.1564V64.6154H0V43.077Z" fill="#FD743E"/>
+      <path d="M0 53.8461H43.1564V64.6154H0V53.8461Z" fill="#ED5E25"/>
+
+      <path
+        d="M43.1564 21.5384H53.9455V43.0769H43.1564V21.5384Z"
+        fill="black"
+        style={{
+          transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px) scaleY(${blinking ? 0.15 : 1})`,
+          transformOrigin: "48px 32px",
+          transformBox: "fill-box",
+        }}
+      />
+      <path
+        d="M64.7346 32.3077H75.5237V53.8461H64.7346V32.3077Z"
+        fill="black"
+        style={{
+          transform: `translate(${eyeOffset.x}px, ${eyeOffset.y}px) scaleY(${blinking ? 0.15 : 1})`,
+          transformOrigin: "70px 43px",
+          transformBox: "fill-box",
+        }}
+      />
+
+      <path d="M43.1564 107.692H53.9455V140H43.1564V107.692Z" fill="#FD743E"/>
+      <path d="M64.7346 107.692H75.5237V140H64.7346V107.692Z" fill="#FD743E"/>
+      <path d="M32.3673 129.231H43.1564V140H32.3673V129.231Z" fill="#FD743E"/>
+      <path d="M75.5237 129.231H86.3127V140H75.5237V129.231Z" fill="#FD743E"/>
+    </svg>
+  );
+}
+
+export default DuckMailLogo;

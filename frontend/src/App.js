@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { BrowserRouter, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ComposePage from "./pages/ComposePage";
 import HistoryPage from "./pages/HistoryPage";
@@ -38,6 +38,7 @@ function App() {
   const [walkProgress, setWalkProgress] = useState(0);
   const [walkFrame, setWalkFrame] = useState(0);
   const [isReturning, setIsReturning] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const mailboxIsOpen = walkProgress >= 1;
 
@@ -287,29 +288,26 @@ function App() {
               >
                 Typewriter
               </NavLink>
-              <NavLink
-                to="/history"
-                style={{
-                  color: "#000",
-                  textDecoration: "none",
-                  transition: "color 0.15s ease, transform 0.08s ease",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#000")}
-                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.92)")}
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-              >
-                History
-              </NavLink>
+              <span
+  onClick={() => setShowHistory(true)}
+  style={{
+    color: "#000",
+    cursor: "pointer",
+    transition: "color 0.15s ease, transform 0.08s ease",
+  }}
+  onMouseEnter={(e) => (e.currentTarget.style.color = "#999")}
+  onMouseLeave={(e) => (e.currentTarget.style.color = "#000")}
+  onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.92)")}
+  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+>
+  History
+</span>
             </div>
           </nav>
 
           <div style={{ flex: 1, overflow: "auto" }}>
-            <Routes>
-              <Route path="/" element={<ComposePage me={me} other={other} />} />
-              <Route path="/history" element={<HistoryPage me={me} />} />
-            </Routes>
+            <ComposePage me={me} other={other} />
+{showHistory && <HistoryPage me={me} onClose={() => setShowHistory(false)} />}
           </div>
         </div>
 

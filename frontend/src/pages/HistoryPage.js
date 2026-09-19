@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import peachButton from "../assets/Peach_Button.svg";
 import crossButton from "../assets/Cross_Button.svg";
 import searchButton from "../assets/Search_Button.svg";
 
 const API_URL = "https://letters-app-am1z.onrender.com";
 
-function HistoryPage({ me }) {
+function HistoryPage({ me, onClose }) {
   const [letters, setLetters] = useState([]);
   const [openLetter, setOpenLetter] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLetters = async () => {
@@ -23,8 +21,6 @@ function HistoryPage({ me }) {
     const interval = setInterval(fetchLetters, 5000);
     return () => clearInterval(interval);
   }, [me]);
-
-  const closeHistory = () => navigate("/");
 
   const filteredLetters = letters.filter((l) => {
   if (!searchQuery.trim()) return true;
@@ -105,7 +101,7 @@ function HistoryPage({ me }) {
           <img
             src={crossButton}
             alt="Back to typewriter"
-            onClick={closeHistory}
+            onClick={onClose}
             style={{ width: 22, height: 22, cursor: "pointer", imageRendering: "pixelated" }}
           />
         </div>

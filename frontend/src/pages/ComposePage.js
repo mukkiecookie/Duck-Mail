@@ -30,14 +30,14 @@ function ComposePage({ me, other }) {
     setShowEnvelope(false);
   };
 
-  const handleSend = async (stamp) => {
-    setSending(true);
-    const params = new URLSearchParams({ sender: me, receiver: other, content });
-    await fetch(`${API_URL}/send?${params}`, { method: "POST" });
-    setSending(false);
-    setContent("");
-    setShowEnvelope(false);
-  };
+  const handleSend = async (stamp, envelope) => {
+  setSending(true);
+  const params = new URLSearchParams({ sender: me, receiver: other, content });
+  await fetch(`${API_URL}/send?${params}`, { method: "POST" });
+  setSending(false);
+  setContent("");
+  setShowEnvelope(false);
+};
 
   const [customDate, setCustomDate] = useState(formatDate());
 
@@ -178,7 +178,11 @@ function ComposePage({ me, other }) {
       </div>
 
       {showEnvelope && (
-        <EnvelopeModal onSend={handleSend} onTrash={handleTrash} sending={sending} />
+        <EnvelopeModal
+          onSend={(stamp, envelope) => handleSend(stamp, envelope)}
+          onBack={() => setShowEnvelope(false)}
+          sending={sending}
+        />
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import time
 import random
 import math
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -100,7 +101,7 @@ def get_letters(viewer: str):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, sender, receiver, content, picked_up_at, deliver_at FROM letters WHERE sender = %s OR receiver = %s ORDER BY id",
+        "SELECT id, sender, receiver, content, sent_at, picked_up_at, deliver_at FROM letters WHERE sender = %s OR receiver = %s ORDER BY id",
         (viewer, viewer),
     )
     rows = cur.fetchall()
@@ -109,15 +110,17 @@ def get_letters(viewer: str):
 
     now = time.time()
     result = []
-    for id_, sender, receiver, content, picked_up_at, deliver_at in rows:
+    for id_, sender, receiver, content, sent_at, picked_up_at, deliver_at in rows:
         delivered = now >= deliver_at
         picked_up = now >= picked_up_at
 
+        sent_date = datetime.fromtimestamp(sent_at).strftime("%d/%m/%Y")
+
         if sender == viewer:
             status = "Delivered" if delivered else ("In Transit" if picked_up else "Pending Pickup")
-            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": status})
+            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": status, "date": sent_date})
         elif delivered:
-            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered"})
+            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered", "date": sent_date})
 
     return result
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import closeButton from "../assets/Close_Button.svg";
+import crossButton from "../assets/Cross_Button.svg";
 import arrowIcon from "../assets/Arrow.svg";
-import blueButton from "../assets/Blue_Button.svg";
+import peachButton from "../assets/Peach_Button.svg";
 
 import envelope1 from "../assets/Envelope_1.png";
 import envelope2 from "../assets/Envelope_2.png";
@@ -64,13 +64,10 @@ function ArrowButton({ onClick, disabled, flip, size = 48 }) {
 
 function EnvelopeModal({ onSend, onBack, sending }) {
   const [envelopeIndex, setEnvelopeIndex] = useState(0);
-  const [stampIndex, setStampIndex] = useState(null);
-  const [stampScroll, setStampScroll] = useState(0);
-  const visibleCount = 3;
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const canScrollLeft = stampScroll > 0;
-  const canScrollRight = stampScroll + visibleCount < STAMPS.length;
-  const canSend = stampIndex !== null;
+  const canScrollLeft = selectedIndex > 0;
+  const canScrollRight = selectedIndex < STAMPS.length - 1;
 
   return (
     <div
@@ -98,7 +95,7 @@ function EnvelopeModal({ onSend, onBack, sending }) {
           boxShadow: "8px 8px 0 rgba(0,0,0,0.25)",
         }}
       >
-        {/* Title bar - lives directly in the peach container */}
+        {/* Title bar */}
         <div
           style={{
             display: "flex",
@@ -109,7 +106,7 @@ function EnvelopeModal({ onSend, onBack, sending }) {
           }}
         >
           <img
-            src={closeButton}
+            src={crossButton}
             alt="Back to typewriter"
             onClick={onBack}
             style={{ width: 22, height: 22, cursor: "pointer", imageRendering: "pixelated" }}
@@ -126,7 +123,7 @@ function EnvelopeModal({ onSend, onBack, sending }) {
             ))}
           </span>
           <img
-            src={closeButton}
+            src={crossButton}
             alt="Back to typewriter"
             onClick={onBack}
             style={{ width: 22, height: 22, cursor: "pointer", imageRendering: "pixelated" }}
@@ -162,21 +159,19 @@ function EnvelopeModal({ onSend, onBack, sending }) {
                 }}
               />
 
-              {stampIndex !== null && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 20,
-                    right: "calc(50% - 190px + 20px)",
-                  }}
-                >
-                  <img
-                    src={STAMPS[stampIndex]}
-                    alt="Selected stamp"
-                    style={{ width: 80, height: "auto", imageRendering: "pixelated", display: "block" }}
-                  />
-                </div>
-              )}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 20,
+                  right: "calc(50% - 190px + 20px)",
+                }}
+              >
+                <img
+                  src={STAMPS[selectedIndex]}
+                  alt="Selected stamp"
+                  style={{ width: 80, height: "auto", imageRendering: "pixelated", display: "block" }}
+                />
+              </div>
             </div>
 
             <ArrowButton
@@ -191,7 +186,7 @@ function EnvelopeModal({ onSend, onBack, sending }) {
               flip
               size={36}
               disabled={!canScrollLeft}
-              onClick={() => setStampScroll((i) => i - 1)}
+              onClick={() => setSelectedIndex((i) => i - 1)}
             />
 
             <div
@@ -200,25 +195,27 @@ function EnvelopeModal({ onSend, onBack, sending }) {
                 gap: 10,
                 flex: 1,
                 justifyContent: "center",
+                alignItems: "center",
                 background: "#FFFCED",
-                border: "2px solid #333",
+                border: "3px solid #333",
                 padding: 12,
               }}
             >
-              {STAMPS.slice(stampScroll, stampScroll + visibleCount).map((stamp, i) => {
-                const actualIndex = stampScroll + i;
-                const isSelected = stampIndex === actualIndex;
+              {[selectedIndex - 1, selectedIndex, selectedIndex + 1].map((idx) => {
+                const inRange = idx >= 0 && idx < STAMPS.length;
+                if (!inRange) {
+                  return <div key={idx} style={{ width: 80, height: 100 }} />;
+                }
+                const isSelected = idx === selectedIndex;
                 return (
                   <img
-                    key={actualIndex}
-                    src={stamp}
-                    alt={`Stamp ${actualIndex + 1}`}
-                    onClick={() => setStampIndex(actualIndex)}
+                    key={idx}
+                    src={STAMPS[idx]}
+                    alt={`Stamp ${idx + 1}`}
                     style={{
                       width: 80,
                       height: "auto",
                       imageRendering: "pixelated",
-                      cursor: "pointer",
                       opacity: isSelected ? 1 : 0.5,
                       transition: "opacity 0.15s ease",
                     }}
@@ -230,44 +227,45 @@ function EnvelopeModal({ onSend, onBack, sending }) {
             <ArrowButton
               size={36}
               disabled={!canScrollRight}
-              onClick={() => setStampScroll((i) => i + 1)}
+              onClick={() => setSelectedIndex((i) => i + 1)}
             />
           </div>
         </div>
+        {/* end of yellow inner container */}
 
         {/* Send button - outside the yellow box, back in the peach area */}
         <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
           <button
-            onClick={() => onSend(STAMPS[stampIndex], ENVELOPES[envelopeIndex])}
-            disabled={!canSend || sending}
-            style={{
-              fontFamily: "Minecraft, sans-serif",
-              fontSize: 16,
-              width: 180,
-              height: 48,
-              border: "none",
-              background: `url(${blueButton})`,
-              backgroundSize: "100% 100%",
-              backgroundRepeat: "no-repeat",
-              color: "#222",
-              cursor: canSend ? "pointer" : "not-allowed",
-              opacity: canSend ? 1 : 0.5,
-              transition: "transform 0.08s ease, filter 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              if (canSend) e.currentTarget.style.filter = "brightness(1.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.filter = "brightness(1)";
-            }}
-            onMouseDown={(e) => {
-              if (canSend) e.currentTarget.style.transform = "scale(0.93)";
-            }}
-            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-          >
-            {sending ? "Sending..." : "Send"}
-          </button>
+  onClick={() => onSend(STAMPS[selectedIndex], ENVELOPES[envelopeIndex])}
+  disabled={sending}
+  style={{
+    fontFamily: "Minecraft, sans-serif",
+    width: 168,
+    height: 46,
+    border: "none",
+    background: `url(${peachButton})`,
+    backgroundSize: "100% 100%",
+    backgroundRepeat: "no-repeat",
+    cursor: sending ? "not-allowed" : "pointer",
+    color: "#222",
+    transition: "transform 0.08s ease, filter 0.15s ease",
+  }}
+  onMouseEnter={(e) => {
+    if (!sending) e.currentTarget.style.filter = "brightness(1.1)";
+  }}
+  onMouseDown={(e) => {
+    if (!sending) e.currentTarget.style.transform = "scale(0.93)";
+  }}
+  onMouseUp={(e) => {
+    e.currentTarget.style.transform = "scale(1)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "scale(1)";
+    e.currentTarget.style.filter = "brightness(1)";
+  }}
+>
+  {sending ? "Sending..." : "Send"}
+</button>
         </div>
       </div>
     </div>

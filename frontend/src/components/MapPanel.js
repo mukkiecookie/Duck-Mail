@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import person1Map from "../assets/Person_1_Map.png";
 import person2Map from "../assets/Person_2_Map.png";
+import duckIcon from "../assets/TopRow_Duck.svg";
 
 import yellowButton from "../assets/Yellow_Button.svg";
 import greenButton from "../assets/Green_Button.svg";
@@ -47,6 +48,7 @@ function getPointAlongPath(waypoints, progress) {
 function MapPanel({ me }) {
   const [tracked, setTracked] = useState([]);
   const [debugCoords, setDebugCoords] = useState(null);
+  const [unseenNewLetter, setUnseenNewLetter] = useState(false);
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -57,6 +59,24 @@ function MapPanel({ me }) {
     };
     fetchTracking();
     const interval = setInterval(fetchTracking, 5000);
+    return () => clearInterval(interval);
+  }, [me]);
+
+  useEffect(() => {
+    const checkNewLetters = async () => {
+      const res = await fetch(`${API_URL}/letters?viewer=${me}`);
+      const data = await res.json();
+      const receivedDelivered = data.filter((l) => l.receiver === me && l.status === "Delivered");
+      if (receivedDelivered.length === 0) {
+        setUnseenNewLetter(false);
+        return;
+      }
+      const maxId = Math.max(...receivedDelivered.map((l) => l.id));
+      const lastSeen = parseInt(localStorage.getItem(`lastSeenLetter_${me}`) || "0", 10);
+      setUnseenNewLetter(maxId > lastSeen);
+    };
+    checkNewLetters();
+    const interval = setInterval(checkNewLetters, 5000);
     return () => clearInterval(interval);
   }, [me]);
 
@@ -78,9 +98,27 @@ function MapPanel({ me }) {
   const duckLeftPct = (duckX / MAP_WIDTH) * 100;
   const duckTopPct = (duckY / MAP_HEIGHT) * 100;
 
+  const isViewerSender = active && active.sender === me;
+
+  let badgeLabel = null;
+  let badgeIcon = null;
+
+  if (active) {
+    if (isViewerSender) {
+      badgeLabel = phase === "pending_pickup" ? "In Dropbox" : "Picked Up";
+      badgeIcon = phase === "pending_pickup" ? yellowButton : greenButton;
+    } else {
+      badgeLabel = "On the Way";
+      badgeIcon = yellowButton;
+    }
+  } else if (unseenNewLetter) {
+    badgeLabel = "New Letter";
+    badgeIcon = greenButton;
+  }
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {active && (
+      {badgeLabel && (
         <div
           style={{
             position: "absolute",
@@ -93,7 +131,7 @@ function MapPanel({ me }) {
             style={{
               width: 140,
               height: 44,
-              background: `url(${phase === "pending_pickup" ? yellowButton : greenButton})`,
+              background: `url(${badgeIcon})`,
               backgroundSize: "100% 100%",
               backgroundRepeat: "no-repeat",
               display: "flex",
@@ -104,7 +142,7 @@ function MapPanel({ me }) {
               color: "#222",
             }}
           >
-            {phase === "pending_pickup" ? "In Dropbox" : "Picked Up"}
+            {badgeLabel}
           </div>
         </div>
       )}
@@ -119,18 +157,20 @@ function MapPanel({ me }) {
         )}
 
         {active && (
-          <div
+          <img
+            src={duckIcon}
+            alt="duck"
             style={{
               position: "absolute",
               left: `${duckLeftPct}%`,
               top: `${duckTopPct}%`,
-              fontSize: 28,
+              width: 32,
+              height: 32,
               transform: "translate(-50%, -50%)",
               transition: "left 1s linear, top 1s linear",
+              imageRendering: "pixelated",
             }}
-          >
-            🦆
-          </div>
+          />
         )}
       </div>
 

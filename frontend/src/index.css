@@ -15,3 +15,14 @@ code {
 body {
   font-family: "Minecraft", sans-serif;
 }
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f3ecd8;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9a876;
+  border-radius: 4px;
+}

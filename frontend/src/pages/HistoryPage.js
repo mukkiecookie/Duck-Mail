@@ -3,6 +3,19 @@ import peachButton from "../assets/Peach_Button.svg";
 import crossButton from "../assets/Cross_Button.svg";
 import searchButton from "../assets/Search_Button.svg";
 
+import stamp1 from "../assets/Stamp_1.png";
+import stamp2 from "../assets/Stamp_2.png";
+import stamp3 from "../assets/Stamp_3.png";
+import stamp4 from "../assets/Stamp_4.png";
+import stamp5 from "../assets/Stamp_5.png";
+import stamp6 from "../assets/Stamp_6.png";
+import stamp7 from "../assets/Stamp_7.png";
+import stamp8 from "../assets/Stamp_8.png";
+import stamp9 from "../assets/Stamp_9.png";
+import stamp10 from "../assets/Stamp_10.png";
+
+const STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
+
 const API_URL = "https://letters-app-am1z.onrender.com";
 
 function HistoryPage({ me, onClose }) {
@@ -15,7 +28,8 @@ function HistoryPage({ me, onClose }) {
     const fetchLetters = async () => {
       const res = await fetch(`${API_URL}/letters?viewer=${me}`);
       const data = await res.json();
-      setLetters(data.slice().reverse());
+      const receivedOnly = data.filter((l) => l.sender !== me);
+      setLetters(receivedOnly.slice().reverse());
     };
     fetchLetters();
     const interval = setInterval(fetchLetters, 5000);
@@ -23,14 +37,14 @@ function HistoryPage({ me, onClose }) {
   }, [me]);
 
   const filteredLetters = letters.filter((l) => {
-  if (!searchQuery.trim()) return true;
-  const q = searchQuery.toLowerCase();
-  return (
-    (l.content || "").toLowerCase().includes(q) ||
-    (l.sender || "").toLowerCase().includes(q) ||
-    (l.date || "").includes(q)
-  );
-});
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (l.content || "").toLowerCase().includes(q) ||
+      (l.sender || "").toLowerCase().includes(q) ||
+      (l.date || "").includes(q)
+    );
+  });
 
   return (
     <div
@@ -69,24 +83,24 @@ function HistoryPage({ me, onClose }) {
           }}
         >
           <img
-  src={searchButton}
-  alt="Search"
-  onClick={() => setSearchOpen((s) => !s)}
-  style={{
-    width: 22,
-    height: 22,
-    cursor: "pointer",
-    imageRendering: "pixelated",
-    transition: "transform 0.08s ease, filter 0.15s ease",
-  }}
-  onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.2)")}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.filter = "brightness(1)";
-    e.currentTarget.style.transform = "scale(1)";
-  }}
-  onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.85)")}
-  onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-/>
+            src={searchButton}
+            alt="Search"
+            onClick={() => setSearchOpen((s) => !s)}
+            style={{
+              width: 22,
+              height: 22,
+              cursor: "pointer",
+              imageRendering: "pixelated",
+              transition: "transform 0.08s ease, filter 0.15s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.2)")}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = "brightness(1)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.85)")}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          />
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {[...Array(5)].map((_, i) => (
               <span key={i} style={{ width: 110, height: 2, background: "#8D504F" }} />
@@ -219,11 +233,35 @@ function HistoryPage({ me, onClose }) {
                 padding: 20,
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 14 }}>
+              {/* From/Date - completely separate, untouched by the float */}
+              <div style={{ fontSize: 13, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
                 <span>From: {openLetter.sender}</span>
                 <span>Date: {openLetter.date}</span>
               </div>
-              <p style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{openLetter.content}</p>
+
+              {/* Only this box contains the floated stamp + wrapping text */}
+              <div
+                style={{
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  paddingRight: 10,
+                }}
+              >
+                <img
+                  src={STAMPS[openLetter.stamp_index] || STAMPS[0]}
+                  alt="Stamp"
+                  style={{
+                    width: 70,
+                    height: "auto",
+                    float: "right",
+                    marginLeft: 14,
+                    marginBottom: 10,
+                  }}
+                />
+                <p style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0 }}>
+                  {openLetter.content}
+                </p>
+              </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>

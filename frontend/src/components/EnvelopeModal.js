@@ -4,15 +4,6 @@ import arrowIcon from "../assets/Arrow.svg";
 import peachButton from "../assets/Peach_Button.svg";
 
 import envelope1 from "../assets/Envelope_1.png";
-import envelope2 from "../assets/Envelope_2.png";
-import envelope3 from "../assets/Envelope_3.png";
-import envelope4 from "../assets/Envelope_4.png";
-import envelope5 from "../assets/Envelope_5.png";
-import envelope6 from "../assets/Envelope_6.png";
-import envelope7 from "../assets/Envelope_7.png";
-import envelope8 from "../assets/Envelope_8.png";
-import envelope9 from "../assets/Envelope_9.png";
-import envelope10 from "../assets/Envelope_10.png";
 
 import stamp1 from "../assets/Stamp_1.png";
 import stamp2 from "../assets/Stamp_2.png";
@@ -25,7 +16,6 @@ import stamp8 from "../assets/Stamp_8.png";
 import stamp9 from "../assets/Stamp_9.png";
 import stamp10 from "../assets/Stamp_10.png";
 
-const ENVELOPES = [envelope1, envelope2, envelope3, envelope4, envelope5, envelope6, envelope7, envelope8, envelope9, envelope10];
 const STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
 
 function ArrowButton({ onClick, disabled, flip, size = 48 }) {
@@ -63,7 +53,6 @@ function ArrowButton({ onClick, disabled, flip, size = 48 }) {
 }
 
 function EnvelopeModal({ onSend, onBack, sending }) {
-  const [envelopeIndex, setEnvelopeIndex] = useState(0);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const canScrollLeft = selectedIndex > 0;
@@ -130,7 +119,7 @@ function EnvelopeModal({ onSend, onBack, sending }) {
           />
         </div>
 
-        {/* INNER container - yellow, wraps envelope + both arrow rows + stamps */}
+        {/* INNER container - yellow, wraps envelope + stamp picker */}
         <div
           style={{
             background: "#FFF3BF",
@@ -139,45 +128,31 @@ function EnvelopeModal({ onSend, onBack, sending }) {
             padding: 24,
           }}
         >
-          {/* Envelope row */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-            <ArrowButton
-              flip
-              disabled={envelopeIndex === 0}
-              onClick={() => setEnvelopeIndex((i) => i - 1)}
+          {/* Envelope preview - fixed, no carousel */}
+          <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <img
+              src={envelope1}
+              alt="Envelope"
+              style={{
+                display: "block",
+                maxWidth: 380,
+                height: "auto",
+              }}
             />
 
-            <div style={{ position: "relative", flex: 1, display: "flex", justifyContent: "center" }}>
+            <div
+              style={{
+                position: "absolute",
+                top: 20,
+                right: "calc(50% - 190px + 20px)",
+              }}
+            >
               <img
-                src={ENVELOPES[envelopeIndex]}
-                alt={`Envelope ${envelopeIndex + 1}`}
-                style={{
-                  display: "block",
-                  maxWidth: 380,
-                  height: "auto",
-                  imageRendering: "pixelated",
-                }}
+                src={STAMPS[selectedIndex]}
+                alt="Selected stamp"
+                style={{ width: 80, height: "auto", display: "block" }}
               />
-
-              <div
-                style={{
-                  position: "absolute",
-                  top: 20,
-                  right: "calc(50% - 190px + 20px)",
-                }}
-              >
-                <img
-                  src={STAMPS[selectedIndex]}
-                  alt="Selected stamp"
-                  style={{ width: 80, height: "auto", imageRendering: "pixelated", display: "block" }}
-                />
-              </div>
             </div>
-
-            <ArrowButton
-              disabled={envelopeIndex === ENVELOPES.length - 1}
-              onClick={() => setEnvelopeIndex((i) => i + 1)}
-            />
           </div>
 
           {/* Stamp picker row */}
@@ -215,7 +190,6 @@ function EnvelopeModal({ onSend, onBack, sending }) {
                     style={{
                       width: 80,
                       height: "auto",
-                      imageRendering: "pixelated",
                       opacity: isSelected ? 1 : 0.5,
                       transition: "opacity 0.15s ease",
                     }}
@@ -236,36 +210,36 @@ function EnvelopeModal({ onSend, onBack, sending }) {
         {/* Send button - outside the yellow box, back in the peach area */}
         <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
           <button
-  onClick={() => onSend(STAMPS[selectedIndex], ENVELOPES[envelopeIndex])}
-  disabled={sending}
-  style={{
-    fontFamily: "Minecraft, sans-serif",
-    width: 168,
-    height: 46,
-    border: "none",
-    background: `url(${peachButton})`,
-    backgroundSize: "100% 100%",
-    backgroundRepeat: "no-repeat",
-    cursor: sending ? "not-allowed" : "pointer",
-    color: "#222",
-    transition: "transform 0.08s ease, filter 0.15s ease",
-  }}
-  onMouseEnter={(e) => {
-    if (!sending) e.currentTarget.style.filter = "brightness(1.1)";
-  }}
-  onMouseDown={(e) => {
-    if (!sending) e.currentTarget.style.transform = "scale(0.93)";
-  }}
-  onMouseUp={(e) => {
-    e.currentTarget.style.transform = "scale(1)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = "scale(1)";
-    e.currentTarget.style.filter = "brightness(1)";
-  }}
->
-  {sending ? "Sending..." : "Send"}
-</button>
+            onClick={() => onSend(selectedIndex)}
+            disabled={sending}
+            style={{
+              fontFamily: "Minecraft, sans-serif",
+              width: 168,
+              height: 46,
+              border: "none",
+              background: `url(${peachButton})`,
+              backgroundSize: "100% 100%",
+              backgroundRepeat: "no-repeat",
+              cursor: sending ? "not-allowed" : "pointer",
+              color: "#222",
+              transition: "transform 0.08s ease, filter 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (!sending) e.currentTarget.style.filter = "brightness(1.1)";
+            }}
+            onMouseDown={(e) => {
+              if (!sending) e.currentTarget.style.transform = "scale(0.93)";
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.filter = "brightness(1)";
+            }}
+          >
+            {sending ? "Sending..." : "Send"}
+          </button>
         </div>
       </div>
     </div>

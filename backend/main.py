@@ -74,26 +74,24 @@ def get_walking_time_seconds(sender: str, receiver: str) -> int:
     return int(distance_m / WALKING_SPEED_MPS)
 
 @app.post("/send")
-def send_letter(sender: str, receiver: str, content: str):
+def send_letter(sender: str, receiver: str, content: str, stamp_index: int = 0):
     now = time.time()
     pickup_delay = random.randint(*PICKUP_DELAY_RANGE)
     picked_up_at = now + pickup_delay
-
     walk_seconds = get_walking_time_seconds(sender, receiver)
     deliver_at = picked_up_at + walk_seconds
 
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO letters (sender, receiver, content, sent_at, picked_up_at, deliver_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
-        (sender, receiver, content, now, picked_up_at, deliver_at),
+        "INSERT INTO letters (sender, receiver, content, sent_at, picked_up_at, deliver_at, stamp_index) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+        (sender, receiver, content, now, picked_up_at, deliver_at, stamp_index),
     )
     letter_id = cur.fetchone()[0]
     conn.commit()
     cur.close()
     conn.close()
 
-    print(f"[Sent] Letter #{letter_id} - pickup in {pickup_delay}s, then {walk_seconds}s walk")
     return {"id": letter_id, "pickup_seconds": pickup_delay, "walk_seconds": walk_seconds, "status": "sent"}
 
 @app.get("/letters")

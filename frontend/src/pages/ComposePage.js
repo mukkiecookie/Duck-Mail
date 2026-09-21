@@ -30,16 +30,19 @@ function ComposePage({ me, other }) {
     setShowEnvelope(false);
   };
 
-  const handleSend = async (stamp, envelope) => {
-  setSending(true);
-  const params = new URLSearchParams({ sender: me, receiver: other, content });
-  await fetch(`${API_URL}/send?${params}`, { method: "POST" });
-  setSending(false);
-  setContent("");
-  setShowEnvelope(false);
-};
-
-  const [customDate, setCustomDate] = useState(formatDate());
+  const handleSend = async (stampIndex) => {
+    setSending(true);
+    const params = new URLSearchParams({
+      sender: me,
+      receiver: other,
+      content,
+      stamp_index: stampIndex,
+    });
+    await fetch(`${API_URL}/send?${params}`, { method: "POST" });
+    setSending(false);
+    setContent("");
+    setShowEnvelope(false);
+  };
 
   return (
     <div
@@ -60,29 +63,14 @@ function ComposePage({ me, other }) {
           border: "2px solid #163558",
           borderRadius: 4,
           padding: 16,
-          marginBottom:-120,
+          marginBottom: -120,
           zIndex: 0,
           fontFamily: "Minecraft, sans-serif",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 10 }}>
           <span>To: {other}</span>
-          <span>
-            Date:{" "}
-            <input
-              type="text"
-              value={customDate}
-              onChange={(e) => setCustomDate(e.target.value)}
-              style={{
-                fontFamily: "Minecraft, sans-serif",
-                fontSize: 13,
-                border: "none",
-                background: "transparent",
-                width: 90,
-                outline: "none",
-              }}
-            />
-          </span>
+          <span>Date: {formatDate()}</span>
         </div>
         <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
         <textarea
@@ -179,7 +167,7 @@ function ComposePage({ me, other }) {
 
       {showEnvelope && (
         <EnvelopeModal
-          onSend={(stamp, envelope) => handleSend(stamp, envelope)}
+          onSend={(stampIndex) => handleSend(stampIndex)}
           onBack={() => setShowEnvelope(false)}
           sending={sending}
         />

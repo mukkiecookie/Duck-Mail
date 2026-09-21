@@ -8,6 +8,9 @@ import random
 import math
 from dotenv import load_dotenv
 from datetime import datetime
+import base64
+from fastapi import UploadFile
+
 
 load_dotenv()
 
@@ -170,3 +173,30 @@ def track_letters(viewer: str):
         })
 
     return result
+
+@app.post("/stamps")
+async def upload_stamp(file: UploadFile):
+    contents = await file.read()
+    encoded = base64.b64encode(contents).decode("utf-8")
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "CREATE TABLE IF NOT EXISTS stamps (id SERIAL PRIMARY KEY, image_data TEXT)"
+    )
+    cur.execute("INSERT INTO stamps (image_data) VALUES (%s) RETURNING id", (encoded,))
+    stamp_id = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"id": stamp_id}
+
+@app.get("/stamps")
+def get_stamps():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS stamps (id SERIAL PRIMARY KEY, image_data TEXT)")
+    cur.execute("SELECT id, image_data FROM stamps ORDER BY id")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [{"id": r[0], "data": r[1]} for r in rows]

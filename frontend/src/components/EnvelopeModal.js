@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import crossButton from "../assets/Cross_Button.svg";
 import arrowIcon from "../assets/Arrow.svg";
 import peachButton from "../assets/Peach_Button.svg";
+import uploadButton from "../assets/Upload_Button.svg";
 
 import envelope1 from "../assets/Envelope_1.png";
 
@@ -16,7 +17,9 @@ import stamp8 from "../assets/Stamp_8.png";
 import stamp9 from "../assets/Stamp_9.png";
 import stamp10 from "../assets/Stamp_10.png";
 
-const STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
+const API_URL = "http://127.0.0.1:8000";
+
+const BUILT_IN_STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
 
 function ArrowButton({ onClick, disabled, flip, size = 48 }) {
   return (
@@ -54,6 +57,39 @@ function ArrowButton({ onClick, disabled, flip, size = 48 }) {
 
 function EnvelopeModal({ onSend, onBack, sending }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [customStamps, setCustomStamps] = useState([]);
+  const fileInputRef = useRef(null);
+
+  const STAMPS = [...BUILT_IN_STAMPS, ...customStamps];
+
+  useEffect(() => {
+    fetch(`${API_URL}/stamps`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCustomStamps(data.map((s) => `data:image/png;base64,${s.data}`));
+      });
+  }, []);
+
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch(`${API_URL}/stamps`, { method: "POST", body: formData });
+
+    // Refresh the stamp list so the new one shows up immediately
+    const res = await fetch(`${API_URL}/stamps`);
+    const data = await res.json();
+    setCustomStamps(data.map((s) => `data:image/png;base64,${s.data}`));
+
+    e.target.value = ""; // reset the input so the same file can be re-selected later
+  };
 
   const canScrollLeft = selectedIndex > 0;
   const canScrollRight = selectedIndex < STAMPS.length - 1;
@@ -95,10 +131,17 @@ function EnvelopeModal({ onSend, onBack, sending }) {
           }}
         >
           <img
-            src={crossButton}
-            alt="Back to typewriter"
-            onClick={onBack}
+            src={uploadButton}
+            alt="Upload a new stamp"
+            onClick={handleUploadClick}
             style={{ width: 22, height: 22, cursor: "pointer", imageRendering: "pixelated" }}
+          />
+          <input
+            type="file"
+            accept="image/png,image/jpeg"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: "none" }}
           />
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {[...Array(5)].map((_, i) => (

@@ -16,7 +16,7 @@ import stamp10 from "../assets/Stamp_10.png";
 
 const STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
 
-const API_URL = "https://letters-app-am1z.onrender.com";
+const API_URL = "http://127.0.0.1:8000";
 
 function HistoryPage({ me, onClose }) {
   const [letters, setLetters] = useState([]);

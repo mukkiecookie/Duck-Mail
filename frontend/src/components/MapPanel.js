@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect} from "react";
 import person1Map from "../assets/Person_1_Map.png";
 import person2Map from "../assets/Person_2_Map.png";
 import duckIcon from "../assets/TopRow_Duck.svg";
@@ -8,16 +8,29 @@ import greenButton from "../assets/Green_Button.svg";
 
 const API_URL = "http://127.0.0.1:8000";
 const MAP_WIDTH = 720;
-const MAP_HEIGHT = 1024;
+const MAP_HEIGHT = 712;
 
 const MAPS = {
   Chandhini: {
     image: person1Map,
-    waypoints: [[258, 150], [330, 255], [417, 355], [463, 430], [463, 517], [455, 610], [490, 655], [500, 735], [548, 833]],
+    waypoints: [
+      [240, 78], [249, 107], [269, 122], [290, 122], [307, 139], [308, 155],
+      [320, 175], [345, 179], [368, 193], [374, 208], [376, 222], [397, 232],
+      [413, 243], [428, 254], [430, 272], [433, 293], [432, 313], [431, 328],
+      [431, 357], [426, 375], [424, 397], [436, 417], [451, 429], [460, 435],
+      [463, 455], [462, 475], [463, 492], [476, 509], [492, 524], [511, 537],
+      [511, 551], [514, 569],
+    ]
   },
   Mukul: {
     image: person2Map,
-    waypoints: [[185, 800], [225, 770], [258, 735], [230, 655], [253, 610], [258, 517], [253, 430], [305, 355], [388, 255], [468, 152]],
+    waypoints: [
+      [207, 562], [210, 546], [210, 533], [226, 518], [246, 507], [254, 492],
+      [258, 471], [258, 438], [280, 419], [296, 403], [296, 377], [287, 360],
+      [288, 332], [287, 302], [288, 272], [293, 257], [308, 242], [329, 232],
+      [346, 222], [346, 202], [361, 189], [383, 177], [412, 160], [418, 134],
+      [435, 118], [456, 120], [471, 106], [479, 95], [479, 81],
+    ]
   },
 };
 
@@ -47,9 +60,9 @@ function getPointAlongPath(waypoints, progress) {
 
 function MapPanel({ me }) {
   const [tracked, setTracked] = useState([]);
-  const [debugCoords, setDebugCoords] = useState(null);
+  // const [debugCoords, setDebugCoords] = useState(null);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
-  const mapRef = useRef(null);
+  // const mapRef = useRef(null);
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -80,13 +93,13 @@ function MapPanel({ me }) {
     return () => clearInterval(interval);
   }, [me]);
 
-  const handleMapClick = (e) => {
-    const rect = mapRef.current.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * MAP_HEIGHT);
-    setDebugCoords([x, y]);
-    console.log(`[${x}, ${y}]`);
-  };
+  // const handleMapClick = (e) => {
+  //   const rect = mapRef.current.getBoundingClientRect();
+  //   const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
+  //   const y = Math.round(((e.clientY - rect.top) / rect.height) * MAP_HEIGHT);
+  //   setDebugCoords([x, y]);
+  //   console.log(`[${x}, ${y}]`);
+  // };
 
   const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
   const mapConfig = MAPS[me];
@@ -148,9 +161,9 @@ function MapPanel({ me }) {
       )}
 
       <div
-        ref={mapRef}
-        onClick={handleMapClick}
-        style={{ position: "relative", width: "100%", height: "100%", cursor: "crosshair" }}
+        // ref={mapRef}
+        // onClick={handleMapClick}
+        style={{ position: "relative", width: "100%", height: "100%" }}
       >
         {mapConfig && (
           <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
@@ -174,11 +187,11 @@ function MapPanel({ me }) {
         )}
       </div>
 
-      {debugCoords && (
+      {/* {debugCoords && (
         <p style={{ position: "absolute", bottom: 0, left: 0, fontSize: 11, background: "#fff", padding: 4 }}>
           Last clicked: [{debugCoords[0]}, {debugCoords[1]}]
         </p>
-      )}
+      )} */}
     </div>
   );
 }

@@ -2,18 +2,21 @@ import { useState, useEffect, useRef } from "react";
 import person1Map from "../assets/Person_1_Map.png";
 import person2Map from "../assets/Person_2_Map.png";
 
-const API_URL = "https://letters-app-am1z.onrender.com";
+import yellowButton from "../assets/Yellow_Button.svg";
+import greenButton from "../assets/Green_Button.svg";
+
+const API_URL = "http://127.0.0.1:8000";
 const MAP_WIDTH = 720;
 const MAP_HEIGHT = 1024;
 
 const MAPS = {
   Chandhini: {
     image: person1Map,
-    waypoints: [[258,150],[330,255],[417,355],[463,430],[463,517],[455,610],[490,655],[500,735],[548,833]],
+    waypoints: [[258, 150], [330, 255], [417, 355], [463, 430], [463, 517], [455, 610], [490, 655], [500, 735], [548, 833]],
   },
   Mukul: {
     image: person2Map,
-    waypoints: [[185,800],[225,770],[258,735],[230,655],[253,610],[258,517],[253,430],[305,355],[388,255],[468,152]],
+    waypoints: [[185, 800], [225, 770], [258, 735], [230, 655], [253, 610], [258, 517], [253, 430], [305, 355], [388, 255], [468, 152]],
   },
 };
 
@@ -66,8 +69,7 @@ function MapPanel({ me }) {
   };
 
   const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
-  const activeSender = active ? active.sender : null;
-  const mapConfig = activeSender ? MAPS[activeSender] : MAPS[me]; // fallback to viewer's own map when idle
+  const mapConfig = MAPS[me];
 
   const progress = active ? active.progress : 0;
   const phase = active ? active.phase : null;
@@ -78,13 +80,32 @@ function MapPanel({ me }) {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {phase === "in_transit" && (
-        <div style={{
-          position: "absolute", top: 10, right: 10, zIndex: 10,
-          background: "#8fe388", border: "2px solid #333", borderRadius: 6,
-          padding: "6px 14px", fontWeight: "bold",
-        }}>
-          Picked Up
+      {active && (
+        <div
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            zIndex: 10,
+          }}
+        >
+          <div
+            style={{
+              width: 140,
+              height: 44,
+              background: `url(${phase === "pending_pickup" ? yellowButton : greenButton})`,
+              backgroundSize: "100% 100%",
+              backgroundRepeat: "no-repeat",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "Minecraft, sans-serif",
+              fontSize: 14,
+              color: "#222",
+            }}
+          >
+            {phase === "pending_pickup" ? "In Dropbox" : "Picked Up"}
+          </div>
         </div>
       )}
 

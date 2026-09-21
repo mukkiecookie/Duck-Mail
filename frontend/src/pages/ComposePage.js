@@ -5,7 +5,7 @@ import EnvelopeModal from "../components/EnvelopeModal";
 import blueButton from "../assets/Blue_Button.svg";
 import greyButton from "../assets/Grey_Button.svg";
 
-const API_URL = "https://letters-app-am1z.onrender.com";
+const API_URL = "http://127.0.0.1:8000";
 
 function formatDate() {
   const d = new Date();

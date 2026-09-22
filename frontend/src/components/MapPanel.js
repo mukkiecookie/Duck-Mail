@@ -1,10 +1,11 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect, useRef } from "react";
 import person1Map from "../assets/Person_1_Map.png";
 import person2Map from "../assets/Person_2_Map.png";
 import duckIcon from "../assets/TopRow_Duck.svg";
 
 import yellowButton from "../assets/Yellow_Button.svg";
 import greenButton from "../assets/Green_Button.svg";
+import greyButton from "../assets/Grey_Button.svg";
 
 const API_URL = "http://127.0.0.1:8000";
 const MAP_WIDTH = 720;
@@ -62,7 +63,10 @@ function MapPanel({ me }) {
   const [tracked, setTracked] = useState([]);
   // const [debugCoords, setDebugCoords] = useState(null);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
-  // const mapRef = useRef(null);
+  const [restSide, setRestSide] = useState(() => localStorage.getItem(`duckRestSide_${me}`) || "A");
+  const [previewLetter, setPreviewLetter] = useState(null);
+  const mapRef = useRef(null);
+  const prevActiveRef = useRef(false);
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -93,6 +97,19 @@ function MapPanel({ me }) {
     return () => clearInterval(interval);
   }, [me]);
 
+  const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
+
+  // Flip the duck's resting side the moment a delivery completes
+  useEffect(() => {
+    if (!active && prevActiveRef.current) {
+      const newSide = restSide === "A" ? "B" : "A";
+      setRestSide(newSide);
+      localStorage.setItem(`duckRestSide_${me}`, newSide);
+    }
+    prevActiveRef.current = !!active;
+  }, [active, restSide, me]);
+
+  // Debug: log clicked map coordinates (disabled)
   // const handleMapClick = (e) => {
   //   const rect = mapRef.current.getBoundingClientRect();
   //   const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
@@ -101,25 +118,29 @@ function MapPanel({ me }) {
   //   console.log(`[${x}, ${y}]`);
   // };
 
-  const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
   const mapConfig = MAPS[me];
 
-  const progress = active ? active.progress : 0;
-  const phase = active ? active.phase : null;
-  const [duckX, duckY] = mapConfig ? getPointAlongPath(mapConfig.waypoints, progress) : [0, 0];
-
+  // Duck position: resting at its stored side, or animating toward the opposite side if active
+  let posProgress;
+  if (active) {
+    posProgress = restSide === "A" ? active.progress : 1 - active.progress;
+  } else {
+    posProgress = restSide === "A" ? 0 : 1;
+  }
+  const [duckX, duckY] = mapConfig ? getPointAlongPath(mapConfig.waypoints, posProgress) : [0, 0];
   const duckLeftPct = (duckX / MAP_WIDTH) * 100;
   const duckTopPct = (duckY / MAP_HEIGHT) * 100;
 
   const isViewerSender = active && active.sender === me;
 
-  let badgeLabel = null;
-  let badgeIcon = null;
+  let badgeLabel = "No New Letter";
+  let badgeIcon = greyButton;
+  let badgeClickable = false;
 
   if (active) {
     if (isViewerSender) {
-      badgeLabel = phase === "pending_pickup" ? "In Dropbox" : "Picked Up";
-      badgeIcon = phase === "pending_pickup" ? yellowButton : greenButton;
+      badgeLabel = active.phase === "pending_pickup" ? "In Dropbox" : "Picked Up";
+      badgeIcon = active.phase === "pending_pickup" ? yellowButton : greenButton;
     } else {
       badgeLabel = "On the Way";
       badgeIcon = yellowButton;
@@ -127,70 +148,137 @@ function MapPanel({ me }) {
   } else if (unseenNewLetter) {
     badgeLabel = "New Letter";
     badgeIcon = greenButton;
+    badgeClickable = true;
   }
+
+  const handleBadgeClick = async () => {
+    if (!badgeClickable) return;
+    const res = await fetch(`${API_URL}/letters?viewer=${me}`);
+    const data = await res.json();
+    const receivedDelivered = data.filter((l) => l.receiver === me && l.status === "Delivered");
+    if (receivedDelivered.length === 0) return;
+    const latest = receivedDelivered.reduce((a, b) => (a.id > b.id ? a : b));
+    setPreviewLetter(latest);
+    localStorage.setItem(`lastSeenLetter_${me}`, latest.id.toString());
+    setUnseenNewLetter(false);
+  };
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {badgeLabel && (
+      <div
+        onClick={handleBadgeClick}
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 10,
+          cursor: badgeClickable ? "pointer" : "default",
+        }}
+      >
         <div
           style={{
+            width: 140,
+            height: 44,
+            background: `url(${badgeIcon})`,
+            backgroundSize: "100% 100%",
+            backgroundRepeat: "no-repeat",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "Minecraft, sans-serif",
+            fontSize: 14,
+            color: "#222",
+          }}
+        >
+          {badgeLabel}
+        </div>
+      </div>
+
+      <div
+        ref={mapRef}
+        // onClick={handleMapClick}
+        style={{ position: "relative", width: "100%", height: "100%", cursor: "crosshair" }}
+      >
+        {mapConfig && (
+          <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+        )}
+
+        <img
+          src={duckIcon}
+          alt="duck"
+          style={{
             position: "absolute",
-            top: 16,
-            right: 16,
-            zIndex: 10,
+            left: `${duckLeftPct}%`,
+            top: `${duckTopPct}%`,
+            width: 32,
+            height: 32,
+            transform: "translate(-50%, -50%)",
+            transition: "left 1s linear, top 1s linear",
+          }}
+        />
+      </div>
+
+      {/* Debug: last clicked coordinates (disabled)
+      {debugCoords && (
+        <p style={{ position: "absolute", bottom: 0, left: 0, fontSize: 11, background: "#fff", padding: 4 }}>
+          Last clicked: [{debugCoords[0]}, {debugCoords[1]}]
+        </p>
+      )}
+      */}
+
+      {previewLetter && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(241, 231, 223, 0.65)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 200,
           }}
         >
           <div
             style={{
-              width: 140,
-              height: 44,
-              background: `url(${badgeIcon})`,
-              backgroundSize: "100% 100%",
-              backgroundRepeat: "no-repeat",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              background: "#F2D7BA",
+              border: "4px solid #222",
+              borderRadius: 15,
+              width: 480,
+              padding: 28,
               fontFamily: "Minecraft, sans-serif",
-              fontSize: 14,
-              color: "#222",
+              boxShadow: "8px 8px 0 rgba(0,0,0,0.25)",
             }}
           >
-            {badgeLabel}
+            <div style={{ background: "#FFF3BF", border: "2px solid #222", borderRadius: 8, padding: 20 }}>
+              <div style={{ fontSize: 13, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
+                <span>From: {previewLetter.sender}</span>
+                <span>Date: {previewLetter.date}</span>
+              </div>
+              <div style={{ maxHeight: 280, overflowY: "auto", paddingRight: 10 }}>
+                <p style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0 }}>{previewLetter.content}</p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+              <button
+                onClick={() => setPreviewLetter(null)}
+                style={{
+                  fontFamily: "Minecraft, sans-serif",
+                  padding: "10px 40px",
+                  background: "#e8a0a0",
+                  border: "2px solid #222",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      <div
-        // ref={mapRef}
-        // onClick={handleMapClick}
-        style={{ position: "relative", width: "100%", height: "100%" }}
-      >
-        {mapConfig && (
-          <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", imageRendering: "pixelated" }} />
-        )}
-
-        {active && (
-          <img
-            src={duckIcon}
-            alt="duck"
-            style={{
-              position: "absolute",
-              left: `${duckLeftPct}%`,
-              top: `${duckTopPct}%`,
-              width: 32,
-              height: 32,
-              transform: "translate(-50%, -50%)",
-              transition: "left 1s linear, top 1s linear",
-            }}
-          />
-        )}
-      </div>
-
-      {/* {debugCoords && (
-        <p style={{ position: "absolute", bottom: 0, left: 0, fontSize: 11, background: "#fff", padding: 4 }}>
-          Last clicked: [{debugCoords[0]}, {debugCoords[1]}]
-        </p>
-      )} */}
     </div>
   );
 }

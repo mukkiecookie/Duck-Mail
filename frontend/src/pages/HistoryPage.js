@@ -30,6 +30,13 @@ function HistoryPage({ me, onClose }) {
       const data = await res.json();
       const receivedOnly = data.filter((l) => l.sender !== me);
       setLetters(receivedOnly.slice().reverse());
+
+      // Mark all currently-visible delivered letters as seen
+      const deliveredIds = receivedOnly.filter((l) => l.status === "Delivered").map((l) => l.id);
+      if (deliveredIds.length > 0) {
+        const maxId = Math.max(...deliveredIds);
+        localStorage.setItem(`lastSeenLetter_${me}`, maxId.toString());
+      }
     };
     fetchLetters();
     const interval = setInterval(fetchLetters, 5000);

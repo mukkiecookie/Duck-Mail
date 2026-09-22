@@ -113,7 +113,6 @@ function App() {
               alt="duck"
               style={{
                 height: "4.12vh",
-                imageRendering: "pixelated",
                 animation: `reveal${i} 3s steps(1) infinite`,
               }}
             />
@@ -141,7 +140,6 @@ function App() {
               alt="sunflower"
               style={{
                 height: "4.12vh",
-                imageRendering: "pixelated",
                 animation: `reveal${4 - i} 3s steps(1) infinite`,
               }}
             />

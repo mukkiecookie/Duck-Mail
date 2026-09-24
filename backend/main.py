@@ -54,7 +54,8 @@ def init_db():
             content TEXT,
             sent_at DOUBLE PRECISION,
             picked_up_at DOUBLE PRECISION,
-            deliver_at DOUBLE PRECISION
+            deliver_at DOUBLE PRECISION,
+            stamp_index INTEGER DEFAULT 0
         )
     """)
     conn.commit()
@@ -110,7 +111,7 @@ def get_letters(viewer: str):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, sender, receiver, content, sent_at, picked_up_at, deliver_at FROM letters WHERE sender = %s OR receiver = %s ORDER BY id",
+        "SELECT id, sender, receiver, content, sent_at, picked_up_at, deliver_at, stamp_index FROM letters WHERE sender = %s OR receiver = %s ORDER BY id",
         (viewer, viewer),
     )
     rows = cur.fetchall()
@@ -119,7 +120,7 @@ def get_letters(viewer: str):
 
     now = time.time()
     result = []
-    for id_, sender, receiver, content, sent_at, picked_up_at, deliver_at in rows:
+    for id_, sender, receiver, content, sent_at, picked_up_at, deliver_at, stamp_index in rows:
         delivered = now >= deliver_at
         picked_up = now >= picked_up_at
 
@@ -127,9 +128,9 @@ def get_letters(viewer: str):
 
         if sender == viewer:
             status = "Delivered" if delivered else ("In Transit" if picked_up else "Pending Pickup")
-            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": status, "date": sent_date})
+            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": status, "date": sent_date, "stamp_index": stamp_index})
         elif delivered:
-            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered", "date": sent_date})
+            result.append({"id": id_, "sender": sender, "receiver": receiver, "content": content, "status": "Delivered", "date": sent_date, "stamp_index": stamp_index})
 
     return result
 

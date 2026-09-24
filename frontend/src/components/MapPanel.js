@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import person1Map from "../assets/Person_1_Map.png";
-import person2Map from "../assets/Person_2_Map.png";
 import duckIcon from "../assets/TopRow_Duck.svg";
 
 import yellowButton from "../assets/Yellow_Button.svg";
@@ -10,29 +9,18 @@ import greyButton from "../assets/Grey_Button.svg";
 const API_URL = "http://127.0.0.1:8000";
 const MAP_WIDTH = 720;
 const MAP_HEIGHT = 712;
+const DEFAULT_HOLDER = "Mukul"; // whoever starts at side A - must match backend's DEFAULT_HOLDER
 
-const MAPS = {
-  Chandhini: {
-    image: person1Map,
-    waypoints: [
-      [240, 78], [249, 107], [269, 122], [290, 122], [307, 139], [308, 155],
-      [320, 175], [345, 179], [368, 193], [374, 208], [376, 222], [397, 232],
-      [413, 243], [428, 254], [430, 272], [433, 293], [432, 313], [431, 328],
-      [431, 357], [426, 375], [424, 397], [436, 417], [451, 429], [460, 435],
-      [463, 455], [462, 475], [463, 492], [476, 509], [492, 524], [511, 537],
-      [511, 551], [514, 569],
-    ]
-  },
-  Mukul: {
-    image: person2Map,
-    waypoints: [
-      [207, 562], [210, 546], [210, 533], [226, 518], [246, 507], [254, 492],
-      [258, 471], [258, 438], [280, 419], [296, 403], [296, 377], [287, 360],
-      [288, 332], [287, 302], [288, 272], [293, 257], [308, 242], [329, 232],
-      [346, 222], [346, 202], [361, 189], [383, 177], [412, 160], [418, 134],
-      [435, 118], [456, 120], [471, 106], [479, 95], [479, 81],
-    ]
-  },
+const SHARED_MAP = {
+  image: person1Map,
+  waypoints: [
+    [240, 78], [249, 107], [269, 122], [290, 122], [307, 139], [308, 155],
+    [320, 175], [345, 179], [368, 193], [374, 208], [376, 222], [397, 232],
+    [413, 243], [428, 254], [430, 272], [433, 293], [432, 313], [431, 328],
+    [431, 357], [426, 375], [424, 397], [436, 417], [451, 429], [460, 435],
+    [463, 455], [462, 475], [463, 492], [476, 509], [492, 524], [511, 537],
+    [511, 551], [514, 569],
+  ],
 };
 
 function getPointAlongPath(waypoints, progress) {
@@ -61,12 +49,10 @@ function getPointAlongPath(waypoints, progress) {
 
 function MapPanel({ me }) {
   const [tracked, setTracked] = useState([]);
-  // const [debugCoords, setDebugCoords] = useState(null);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
-  const [restSide, setRestSide] = useState(() => localStorage.getItem(`duckRestSide_${me}`) || "A");
+  const [holder, setHolder] = useState(null);
   const [previewLetter, setPreviewLetter] = useState(null);
   const mapRef = useRef(null);
-  const prevActiveRef = useRef(false);
 
   useEffect(() => {
     const fetchTracking = async () => {
@@ -76,6 +62,17 @@ function MapPanel({ me }) {
     };
     fetchTracking();
     const interval = setInterval(fetchTracking, 5000);
+    return () => clearInterval(interval);
+  }, [me]);
+
+  useEffect(() => {
+    const fetchDuckStatus = async () => {
+      const res = await fetch(`${API_URL}/duck-status?viewer=${me}`);
+      const data = await res.json();
+      setHolder(data.holder);
+    };
+    fetchDuckStatus();
+    const interval = setInterval(fetchDuckStatus, 5000);
     return () => clearInterval(interval);
   }, [me]);
 
@@ -98,40 +95,21 @@ function MapPanel({ me }) {
   }, [me]);
 
   const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
+  const isViewerSender = active && active.sender === me;
 
-  // Flip the duck's resting side the moment a delivery completes
-  useEffect(() => {
-    if (!active && prevActiveRef.current) {
-      const newSide = restSide === "A" ? "B" : "A";
-      setRestSide(newSide);
-      localStorage.setItem(`duckRestSide_${me}`, newSide);
-    }
-    prevActiveRef.current = !!active;
-  }, [active, restSide, me]);
+  // Position is now the same for both viewers - based on who's actually sending, not who's looking
+  const isSenderDefaultHolder = active && active.sender === DEFAULT_HOLDER;
 
-  // Debug: log clicked map coordinates (disabled)
-  // const handleMapClick = (e) => {
-  //   const rect = mapRef.current.getBoundingClientRect();
-  //   const x = Math.round(((e.clientX - rect.left) / rect.width) * MAP_WIDTH);
-  //   const y = Math.round(((e.clientY - rect.top) / rect.height) * MAP_HEIGHT);
-  //   setDebugCoords([x, y]);
-  //   console.log(`[${x}, ${y}]`);
-  // };
-
-  const mapConfig = MAPS[me];
-
-  // Duck position: resting at its stored side, or animating toward the opposite side if active
   let posProgress;
   if (active) {
-    posProgress = restSide === "A" ? active.progress : 1 - active.progress;
+    posProgress = isSenderDefaultHolder ? active.progress : 1 - active.progress;
   } else {
-    posProgress = restSide === "A" ? 0 : 1;
+    posProgress = holder === DEFAULT_HOLDER ? 0 : 1;
   }
-  const [duckX, duckY] = mapConfig ? getPointAlongPath(mapConfig.waypoints, posProgress) : [0, 0];
+
+  const [duckX, duckY] = getPointAlongPath(SHARED_MAP.waypoints, posProgress);
   const duckLeftPct = (duckX / MAP_WIDTH) * 100;
   const duckTopPct = (duckY / MAP_HEIGHT) * 100;
-
-  const isViewerSender = active && active.sender === me;
 
   let badgeLabel = "No New Letter";
   let badgeIcon = greyButton;
@@ -196,12 +174,13 @@ function MapPanel({ me }) {
 
       <div
         ref={mapRef}
-        // onClick={handleMapClick}
         style={{ position: "relative", width: "100%", height: "100%", cursor: "crosshair" }}
       >
-        {mapConfig && (
-          <img src={mapConfig.image} alt="Delivery route" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-        )}
+        <img
+          src={SHARED_MAP.image}
+          alt="Delivery route"
+          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+        />
 
         <img
           src={duckIcon}
@@ -217,14 +196,6 @@ function MapPanel({ me }) {
           }}
         />
       </div>
-
-      {/* Debug: last clicked coordinates (disabled)
-      {debugCoords && (
-        <p style={{ position: "absolute", bottom: 0, left: 0, fontSize: 11, background: "#fff", padding: 4 }}>
-          Last clicked: [{debugCoords[0]}, {debugCoords[1]}]
-        </p>
-      )}
-      */}
 
       {previewLetter && (
         <div

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import typewriterImg from "../assets/Typewriter.png";
 import EnvelopeModal from "../components/EnvelopeModal";
 
@@ -19,9 +19,21 @@ function ComposePage({ me, other }) {
   const [content, setContent] = useState("");
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [sending, setSending] = useState(false);
+  const [canSend, setCanSend] = useState(true);
+
+  useEffect(() => {
+    const checkTurn = async () => {
+      const res = await fetch(`${API_URL}/duck-status?viewer=${me}`);
+      const data = await res.json();
+      setCanSend(data.can_send);
+    };
+    checkTurn();
+    const interval = setInterval(checkTurn, 5000);
+    return () => clearInterval(interval);
+  }, [me]);
 
   const openEnvelope = () => {
-    if (!content.trim()) return;
+    if (!content.trim() || !canSend) return;
     setShowEnvelope(true);
   };
 
@@ -43,6 +55,9 @@ function ComposePage({ me, other }) {
     setContent("");
     setShowEnvelope(false);
   };
+
+  const [showWaitMessage, setShowWaitMessage] = useState(false);
+
 
   return (
     <div
@@ -75,7 +90,14 @@ function ComposePage({ me, other }) {
         <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
         <textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            if (!canSend) return; // block typing entirely while waiting
+            setContent(e.target.value);
+          }}
+          onFocus={() => {
+            if (!canSend) setShowWaitMessage(true);
+          }}
+          onBlur={() => setShowWaitMessage(false)}
           placeholder="Write your letter..."
           style={{
             width: "100%",
@@ -88,6 +110,7 @@ function ComposePage({ me, other }) {
             fontSize: 13,
             lineHeight: 1.6,
             overflowY: "auto",
+            cursor: canSend ? "text" : "not-allowed",
           }}
         />
       </div>
@@ -103,7 +126,7 @@ function ComposePage({ me, other }) {
       <div style={{ display: "flex", gap: "8.5417vw", marginTop: 40 }}>
         <button
           onClick={openEnvelope}
-          disabled={!content.trim()}
+          disabled={!content.trim() || !canSend}
           style={{
             fontFamily: "Minecraft, sans-serif",
             width: 168,
@@ -133,6 +156,26 @@ function ComposePage({ me, other }) {
         >
           Envelope
         </button>
+        {showWaitMessage && (
+          <p
+            style={{
+              position: "absolute",
+              top: "-38%",
+              left: "18%",
+              width: "64%",
+              textAlign: "center",
+              fontSize: 12,
+              color: "#a94442",
+              background: "#fdf6d8",
+              padding: "4px 8px",
+              borderRadius: 4,
+              margin: 0,
+            }}
+          >
+            Waiting for the duck to come back...
+          </p>
+        )}
+
         <button
           onClick={handleTrash}
           style={{

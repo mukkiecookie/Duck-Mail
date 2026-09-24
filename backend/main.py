@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 import base64
 from fastapi import UploadFile
+from fastapi import HTTPException
 
 
 load_dotenv()
@@ -29,6 +30,9 @@ LOCATIONS = {
     "Mukul": (28.653035244938376, 77.18495744899086),
     "Chandhini": (28.266865388908272, 77.0658879353592),
 }
+
+DEFAULT_HOLDER = "Mukul"  # who starts out able to send first
+RESET_HOURS = 48
 
 WALKING_SPEED_MPS = 1.4  # average human walking speed, ~5 km/h
 ROUTE_INEFFICIENCY_FACTOR = 1.35  # tuned to roughly match your real 12h walk
@@ -78,6 +82,10 @@ def get_walking_time_seconds(sender: str, receiver: str) -> int:
 
 @app.post("/send")
 def send_letter(sender: str, receiver: str, content: str, stamp_index: int = 0):
+    status = compute_duck_status()
+    if status["in_transit"] or status["holder"] != sender:
+        raise HTTPException(status_code=403, detail="It's not your turn to send yet.")
+
     now = time.time()
     pickup_delay = random.randint(*PICKUP_DELAY_RANGE)
     picked_up_at = now + pickup_delay
@@ -200,3 +208,35 @@ def get_stamps():
     cur.close()
     conn.close()
     return [{"id": r[0], "data": r[1]} for r in rows]
+
+def compute_duck_status():
+    conn = get_db()
+    cur = conn.cursor()
+    now = time.time()
+
+    # Is there an undelivered letter right now? (duck is mid-transit)
+    cur.execute("SELECT 1 FROM letters WHERE deliver_at > %s ORDER BY id DESC LIMIT 1", (now,))
+    if cur.fetchone():
+        cur.close()
+        conn.close()
+        return {"holder": None, "in_transit": True}
+
+    # Otherwise, find the most recently delivered letter
+    cur.execute("SELECT sender, receiver, deliver_at FROM letters WHERE deliver_at <= %s ORDER BY id DESC LIMIT 1", (now,))
+    latest = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not latest:
+        return {"holder": DEFAULT_HOLDER, "in_transit": False}
+
+    sender, receiver, deliver_at = latest
+    if now - deliver_at > RESET_HOURS * 3600:
+        return {"holder": DEFAULT_HOLDER, "in_transit": False}  # 48h reset
+    return {"holder": receiver, "in_transit": False}  # duck rests with whoever last received
+
+@app.get("/duck-status")
+def duck_status(viewer: str):
+    status = compute_duck_status()
+    can_send = (not status["in_transit"]) and status["holder"] == viewer
+    return {"holder": status["holder"], "in_transit": status["in_transit"], "can_send": can_send}

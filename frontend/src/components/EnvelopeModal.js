@@ -8,7 +8,7 @@ import envelope1 from "../assets/Envelope_1.png";
 
 import stamp1 from "../assets/Stamp_1.png";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://letters-app-am1z.onrender.com";
 
 const BUILT_IN_STAMPS = [stamp1];
 

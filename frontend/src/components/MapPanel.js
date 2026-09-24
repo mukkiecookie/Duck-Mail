@@ -6,7 +6,7 @@ import yellowButton from "../assets/Yellow_Button.svg";
 import greenButton from "../assets/Green_Button.svg";
 import greyButton from "../assets/Grey_Button.svg";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://letters-app-am1z.onrender.com";
 const MAP_WIDTH = 720;
 const MAP_HEIGHT = 712;
 const DEFAULT_HOLDER = "Mukul"; // whoever starts at side A - must match backend's DEFAULT_HOLDER

@@ -182,19 +182,21 @@ function MapPanel({ me }) {
           style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
         />
 
-        <img
-          src={duckIcon}
-          alt="duck"
-          style={{
-            position: "absolute",
-            left: `${duckLeftPct}%`,
-            top: `${duckTopPct}%`,
-            width: 32,
-            height: 32,
-            transform: "translate(-50%, -50%)",
-            transition: "left 1s linear, top 1s linear",
-          }}
-        />
+        {holder !== null && (
+          <img
+            src={duckIcon}
+            alt="duck"
+            style={{
+              position: "absolute",
+              left: `${duckLeftPct}%`,
+              top: `${duckTopPct}%`,
+              width: 32,
+              height: 32,
+              animation: "duckBounce 0.6s ease-in-out infinite",
+              transition: "left 1s linear, top 1s linear",
+            }}
+          />
+        )}
       </div>
 
       {previewLetter && (

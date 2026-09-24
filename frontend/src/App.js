@@ -282,7 +282,7 @@ function App() {
                 onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.92)")}
                 onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
               >
-                History
+                Letterbox
               </span>
             </div>
           </nav>

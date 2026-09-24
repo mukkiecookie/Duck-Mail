@@ -29,3 +29,32 @@
   66.66%, 83.33% { opacity: 1; }
   83.34%, 100% { opacity: 0; }
 }
+
+@keyframes duckBounce {
+  /* squashed flat the instant it lands */
+  0% {
+    transform: translate(-50%, -50%) translateY(0) scale(1.15, 0.8);
+    animation-timing-function: cubic-bezier(0.17, 0.67, 0.35, 1); /* fast launch, decelerating */
+  }
+  /* mid-air on the way up, subtle stretch from the motion */
+  20% {
+    transform: translate(-50%, -50%) translateY(-4px) scale(0.98, 1.04);
+  }
+  /* hangs at the peak - low velocity, so it lingers here */
+  35%, 55% {
+    transform: translate(-50%, -50%) translateY(-5px) scale(1, 1);
+    animation-timing-function: cubic-bezier(0.65, 0, 0.83, 0.33); /* slow start, accelerating down */
+  }
+  /* falling fast, subtle stretch again */
+  80% {
+    transform: translate(-50%, -50%) translateY(-1px) scale(0.98, 1.04);
+  }
+  /* impact - squash */
+  92% {
+    transform: translate(-50%, -50%) translateY(0) scale(1.15, 0.8);
+  }
+  /* quick settle before next launch */
+  100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1.15, 0.8);
+  }
+}

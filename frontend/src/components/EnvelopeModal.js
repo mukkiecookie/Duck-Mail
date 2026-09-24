@@ -7,19 +7,10 @@ import uploadButton from "../assets/Upload_Button.svg";
 import envelope1 from "../assets/Envelope_1.png";
 
 import stamp1 from "../assets/Stamp_1.png";
-import stamp2 from "../assets/Stamp_2.png";
-import stamp3 from "../assets/Stamp_3.png";
-import stamp4 from "../assets/Stamp_4.png";
-import stamp5 from "../assets/Stamp_5.png";
-import stamp6 from "../assets/Stamp_6.png";
-import stamp7 from "../assets/Stamp_7.png";
-import stamp8 from "../assets/Stamp_8.png";
-import stamp9 from "../assets/Stamp_9.png";
-import stamp10 from "../assets/Stamp_10.png";
 
 const API_URL = "http://127.0.0.1:8000";
 
-const BUILT_IN_STAMPS = [stamp1, stamp2, stamp3, stamp4, stamp5, stamp6, stamp7, stamp8, stamp9, stamp10];
+const BUILT_IN_STAMPS = [stamp1];
 
 function ArrowButton({ onClick, disabled, flip, size = 48 }) {
   return (

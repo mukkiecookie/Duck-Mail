@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import typewriterImg from "../assets/Typewriter.png";
 import EnvelopeModal from "../components/EnvelopeModal";
 
@@ -19,21 +19,9 @@ function ComposePage({ me, other }) {
   const [content, setContent] = useState("");
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [sending, setSending] = useState(false);
-  const [canSend, setCanSend] = useState(true);
-
-  useEffect(() => {
-    const checkTurn = async () => {
-      const res = await fetch(`${API_URL}/duck-status?viewer=${me}`);
-      const data = await res.json();
-      setCanSend(data.can_send);
-    };
-    checkTurn();
-    const interval = setInterval(checkTurn, 5000);
-    return () => clearInterval(interval);
-  }, [me]);
 
   const openEnvelope = () => {
-    if (!content.trim() || !canSend) return;
+    if (!content.trim()) return;
     setShowEnvelope(true);
   };
 
@@ -87,10 +75,7 @@ function ComposePage({ me, other }) {
         <div style={{ borderTop: "1px solid #999", marginBottom: 10 }} />
         <textarea
           value={content}
-          onChange={(e) => {
-            if (!canSend) return;
-            setContent(e.target.value);
-          }}
+          onChange={(e) => setContent(e.target.value)}
           placeholder="Write your letter..."
           style={{
             width: "100%",
@@ -103,7 +88,6 @@ function ComposePage({ me, other }) {
             fontSize: 13,
             lineHeight: 1.6,
             overflowY: "auto",
-            cursor: canSend ? "text" : "not-allowed",
           }}
         />
       </div>
@@ -119,7 +103,7 @@ function ComposePage({ me, other }) {
       <div style={{ display: "flex", gap: "8.5417vw", marginTop: 40 }}>
         <button
           onClick={openEnvelope}
-          disabled={!content.trim() || !canSend}
+          disabled={!content.trim()}
           style={{
             fontFamily: "Minecraft, sans-serif",
             width: 168,

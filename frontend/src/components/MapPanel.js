@@ -47,6 +47,45 @@ function getPointAlongPath(waypoints, progress) {
   return waypoints[waypoints.length - 1];
 }
 
+// Given one tracked letter, figure out where along the shared path its duck sits.
+// Letters sent by DEFAULT_HOLDER walk the path forward (progress 0 -> 1);
+// letters sent the other direction walk it backward (progress 1 -> 0).
+function getDuckPosition(letter) {
+  const isSenderDefaultHolder = letter.sender === DEFAULT_HOLDER;
+  const posProgress = isSenderDefaultHolder ? letter.progress : 1 - letter.progress;
+  const [x, y] = getPointAlongPath(SHARED_MAP.waypoints, posProgress);
+  return {
+    leftPct: (x / MAP_WIDTH) * 100,
+    topPct: (y / MAP_HEIGHT) * 100,
+  };
+}
+
+// Multiple letters from the same sender often share the exact same progress
+// (e.g. both still "pending_pickup"), which would stack their ducks on top of
+// each other. Nudge overlapping ducks into a small circle so each stays visible.
+function getSpreadDuckPositions(tracked) {
+  const positions = tracked.map((letter) => ({ letter, ...getDuckPosition(letter) }));
+
+  const groups = {};
+  positions.forEach((p) => {
+    const key = `${p.leftPct.toFixed(1)}_${p.topPct.toFixed(1)}`;
+    (groups[key] = groups[key] || []).push(p);
+  });
+
+  const OFFSET_PCT = 2.2; // how far apart overlapping ducks get nudged, in % of map size
+
+  Object.values(groups).forEach((group) => {
+    if (group.length <= 1) return;
+    group.forEach((p, i) => {
+      const angle = (2 * Math.PI * i) / group.length;
+      p.leftPct += Math.cos(angle) * OFFSET_PCT;
+      p.topPct += Math.sin(angle) * OFFSET_PCT;
+    });
+  });
+
+  return positions;
+}
+
 function MapPanel({ me }) {
   const [tracked, setTracked] = useState([]);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
@@ -97,19 +136,11 @@ function MapPanel({ me }) {
   const active = tracked.find((t) => t.sender === me) || tracked.find((t) => t.receiver === me);
   const isViewerSender = active && active.sender === me;
 
-  // Position is now the same for both viewers - based on who's actually sending, not who's looking
-  const isSenderDefaultHolder = active && active.sender === DEFAULT_HOLDER;
-
-  let posProgress;
-  if (active) {
-    posProgress = isSenderDefaultHolder ? active.progress : 1 - active.progress;
-  } else {
-    posProgress = holder === DEFAULT_HOLDER ? 0 : 1;
-  }
-
-  const [duckX, duckY] = getPointAlongPath(SHARED_MAP.waypoints, posProgress);
-  const duckLeftPct = (duckX / MAP_WIDTH) * 100;
-  const duckTopPct = (duckY / MAP_HEIGHT) * 100;
+  // Resting position (used only when nothing is currently in transit)
+  const restProgress = holder === DEFAULT_HOLDER ? 0 : 1;
+  const [restX, restY] = getPointAlongPath(SHARED_MAP.waypoints, restProgress);
+  const restLeftPct = (restX / MAP_WIDTH) * 100;
+  const restTopPct = (restY / MAP_HEIGHT) * 100;
 
   let badgeLabel = "No New Letter";
   let badgeIcon = greyButton;
@@ -182,20 +213,41 @@ function MapPanel({ me }) {
           style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
         />
 
-        {(holder !== null || active) && (
-          <img
-            src={duckIcon}
-            alt="duck"
-            style={{
-              position: "absolute",
-              left: `${duckLeftPct}%`,
-              top: `${duckTopPct}%`,
-              width: 32,
-              height: 32,
-              animation: "duckBounce 0.6s ease-in-out infinite",
-              transition: "left 1s linear, top 1s linear",
-            }}
-          />
+        {tracked.length > 0 ? (
+          // One duck per in-transit letter, nudged apart if they'd otherwise overlap
+          getSpreadDuckPositions(tracked).map(({ letter, leftPct, topPct }) => (
+            <img
+              key={letter.id}
+              src={duckIcon}
+              alt="duck"
+              style={{
+                position: "absolute",
+                left: `${leftPct}%`,
+                top: `${topPct}%`,
+                width: 32,
+                height: 32,
+                animation: "duckBounce 0.6s ease-in-out infinite",
+                transition: "left 1s linear, top 1s linear",
+              }}
+            />
+          ))
+        ) : (
+          // Nothing in transit - show a single duck resting with whoever holds it
+          holder !== null && (
+            <img
+              src={duckIcon}
+              alt="duck"
+              style={{
+                position: "absolute",
+                left: `${restLeftPct}%`,
+                top: `${restTopPct}%`,
+                width: 32,
+                height: 32,
+                animation: "duckBounce 0.6s ease-in-out infinite",
+                transition: "left 1s linear, top 1s linear",
+              }}
+            />
+          )
         )}
       </div>
 

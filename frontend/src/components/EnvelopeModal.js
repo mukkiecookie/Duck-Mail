@@ -46,20 +46,11 @@ function ArrowButton({ onClick, disabled, flip, size = 48 }) {
   );
 }
 
-function EnvelopeModal({ onSend, onBack, sending }) {
+function EnvelopeModal({ onSend, onBack, sending, customStamps, onStampUploaded }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [customStamps, setCustomStamps] = useState([]);
   const fileInputRef = useRef(null);
 
   const STAMPS = [...BUILT_IN_STAMPS, ...customStamps];
-
-  useEffect(() => {
-    fetch(`${API_URL}/stamps`)
-      .then((res) => res.json())
-      .then((data) => {
-        setCustomStamps(data.map((s) => `data:image/png;base64,${s.data}`));
-      });
-  }, []);
 
   const handleUploadClick = () => {
     fileInputRef.current.click();
@@ -69,21 +60,44 @@ function EnvelopeModal({ onSend, onBack, sending }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    const compressedBlob = await compressImage(file);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressedBlob, file.name);
 
     await fetch(`${API_URL}/stamps`, { method: "POST", body: formData });
+    await onStampUploaded(); // tells App.js to refetch, updating the shared list
 
-    // Refresh the stamp list so the new one shows up immediately
-    const res = await fetch(`${API_URL}/stamps`);
-    const data = await res.json();
-    setCustomStamps(data.map((s) => `data:image/png;base64,${s.data}`));
-
-    e.target.value = ""; // reset the input so the same file can be re-selected later
+    e.target.value = "";
   };
 
   const canScrollLeft = selectedIndex > 0;
   const canScrollRight = selectedIndex < STAMPS.length - 1;
+
+  const compressImage = (file, maxSize = 200) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => resolve(blob), "image/png");
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   return (
     <div

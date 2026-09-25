@@ -57,6 +57,14 @@ function App() {
   const [walkFrame, setWalkFrame] = useState(0);
   const [isReturning, setIsReturning] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+
+  const [initialLetterId, setInitialLetterId] = useState(null);
+
+  const handleOpenLetterFromMap = (id) => {
+    setInitialLetterId(id);
+    setShowHistory(true);
+  };
+
   const [backendReady, setBackendReady] = useState(false);
   const [duckFact] = useState(
     () => DUCK_FACTS[Math.floor(Math.random() * DUCK_FACTS.length)]
@@ -137,7 +145,29 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
-  if (!backendReady) {
+  const [stamps, setStamps] = useState([]);
+  const [stampsReady, setStampsReady] = useState(false);
+
+  const refreshStamps = async () => {
+    const res = await fetch(`${API_URL}/stamps`);
+    const data = await res.json();
+    setStamps(data.map((s) => `data:image/png;base64,${s.data}`));
+  };
+
+  useEffect(() => {
+    refreshStamps().then(() => setStampsReady(true));
+  }, []);
+
+  useEffect(() => {
+    fetch(`${API_URL}/stamps`)
+      .then((res) => res.json())
+      .then((data) => {
+        setStamps(data.map((s) => `data:image/png;base64,${s.data}`));
+        setStampsReady(true);
+      });
+  }, []);
+
+  if (!backendReady || !stampsReady) {
     return (
       <div
         style={{
@@ -363,14 +393,21 @@ function App() {
           </nav>
 
           <div style={{ flex: 1, overflow: "auto" }}>
-            <ComposePage me={me} other={other} />
-            {showHistory && <HistoryPage me={me} onClose={() => setShowHistory(false)} />}
+            <ComposePage me={me} other={other} customStamps={stamps} onStampUploaded={refreshStamps} />
+            {showHistory && (
+              <HistoryPage
+                me={me}
+                onClose={() => setShowHistory(false)}
+                initialLetterId={initialLetterId}
+                onInitialLetterHandled={() => setInitialLetterId(null)}
+              />
+            )}
           </div>
         </div>
 
         {/* RIGHT SIDE - always the map */}
         <div style={{ width: "50%", height: "100%", background: "#3381D1" }}>
-          <MapPanel me={me} />
+          <MapPanel me={me} onOpenLetter={handleOpenLetterFromMap} />
         </div>
       </div>
     </BrowserRouter>

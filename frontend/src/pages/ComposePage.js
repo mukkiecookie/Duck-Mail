@@ -15,10 +15,22 @@ function formatDate() {
   return `${dd}/${mm}/${yyyy}`;
 }
 
-function ComposePage({ me, other }) {
+function ComposePage({ me, other, customStamps, onStampUploaded }) {
   const [content, setContent] = useState("");
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [sending, setSending] = useState(false);
+
+  {
+    showEnvelope && (
+      <EnvelopeModal
+        onSend={(stampIndex) => handleSend(stampIndex)}
+        onBack={() => setShowEnvelope(false)}
+        sending={sending}
+        customStamps={customStamps}
+        onStampUploaded={onStampUploaded}
+      />
+    )
+  }
 
   const openEnvelope = () => {
     if (!content.trim()) return;
@@ -171,6 +183,7 @@ function ComposePage({ me, other }) {
           onSend={(stampIndex) => handleSend(stampIndex)}
           onBack={() => setShowEnvelope(false)}
           sending={sending}
+          customStamps={customStamps}
         />
       )}
     </div>

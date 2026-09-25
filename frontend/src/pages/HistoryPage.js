@@ -9,7 +9,7 @@ const BUILT_IN_STAMPS = [stamp1];
 
 const API_URL = "https://letters-app-am1z.onrender.com";
 
-function HistoryPage({ me, onClose }) {
+function HistoryPage({ me, onClose, initialLetterId, onInitialLetterHandled }) {
   const [letters, setLetters] = useState([]);
   const [openLetter, setOpenLetter] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -55,6 +55,16 @@ function HistoryPage({ me, onClose }) {
       (l.date || "").includes(q)
     );
   });
+
+  useEffect(() => {
+    if (initialLetterId && letters.length > 0) {
+      const match = letters.find((l) => l.id === initialLetterId);
+      if (match) {
+        setOpenLetter(match);
+      }
+      onInitialLetterHandled();
+    }
+  }, [initialLetterId, letters, onInitialLetterHandled]);
 
   return (
     <div

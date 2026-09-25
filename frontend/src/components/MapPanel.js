@@ -86,11 +86,11 @@ function getSpreadDuckPositions(tracked) {
   return positions;
 }
 
-function MapPanel({ me }) {
+function MapPanel({ me, onOpenLetter }) {
   const [tracked, setTracked] = useState([]);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
   const [holder, setHolder] = useState(null);
-  const [previewLetter, setPreviewLetter] = useState(null);
+  const [setPreviewLetter] = useState(null);
   const mapRef = useRef(null);
 
   useEffect(() => {
@@ -167,10 +167,11 @@ function MapPanel({ me }) {
     const receivedDelivered = data.filter((l) => l.receiver === me && l.status === "Delivered");
     if (receivedDelivered.length === 0) return;
     const latest = receivedDelivered.reduce((a, b) => (a.id > b.id ? a : b));
-    setPreviewLetter(latest);
     localStorage.setItem(`lastSeenLetter_${me}`, latest.id.toString());
     setUnseenNewLetter(false);
+    onOpenLetter(latest.id);
   };
+
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -250,60 +251,6 @@ function MapPanel({ me }) {
           )
         )}
       </div>
-
-      {previewLetter && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(241, 231, 223, 0.65)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 200,
-          }}
-        >
-          <div
-            style={{
-              background: "#F2D7BA",
-              border: "4px solid #222",
-              borderRadius: 15,
-              width: 480,
-              padding: 28,
-              fontFamily: "Minecraft, sans-serif",
-              boxShadow: "8px 8px 0 rgba(0,0,0,0.25)",
-            }}
-          >
-            <div style={{ background: "#FFF3BF", border: "2px solid #222", borderRadius: 8, padding: 20 }}>
-              <div style={{ fontSize: 13, marginBottom: 14, display: "flex", justifyContent: "space-between" }}>
-                <span>From: {previewLetter.sender}</span>
-                <span>Date: {previewLetter.date}</span>
-              </div>
-              <div style={{ maxHeight: 280, overflowY: "auto", paddingRight: 10 }}>
-                <p style={{ fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0 }}>{previewLetter.content}</p>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
-              <button
-                onClick={() => setPreviewLetter(null)}
-                style={{
-                  fontFamily: "Minecraft, sans-serif",
-                  padding: "10px 40px",
-                  background: "#e8a0a0",
-                  border: "2px solid #222",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from datetime import datetime
 import base64
 from fastapi import UploadFile
-from fastapi import HTTPException
 
 
 load_dotenv()
@@ -83,10 +82,6 @@ def get_walking_time_seconds(sender: str, receiver: str) -> int:
 
 @app.post("/send")
 def send_letter(sender: str, receiver: str, content: str, stamp_index: int = 0):
-    status = compute_duck_status()
-    if status["in_transit"] or status["holder"] != sender:
-        raise HTTPException(status_code=403, detail="It's not your turn to send yet.")
-
     now = time.time()
     pickup_delay = random.randint(*PICKUP_DELAY_RANGE)
     picked_up_at = now + pickup_delay

@@ -56,9 +56,6 @@ function ComposePage({ me, other }) {
     setShowEnvelope(false);
   };
 
-  const [showWaitMessage, setShowWaitMessage] = useState(false);
-
-
   return (
     <div
       style={{
@@ -91,13 +88,9 @@ function ComposePage({ me, other }) {
         <textarea
           value={content}
           onChange={(e) => {
-            if (!canSend) return; // block typing entirely while waiting
+            if (!canSend) return;
             setContent(e.target.value);
           }}
-          onFocus={() => {
-            if (!canSend) setShowWaitMessage(true);
-          }}
-          onBlur={() => setShowWaitMessage(false)}
           placeholder="Write your letter..."
           style={{
             width: "100%",
@@ -156,25 +149,6 @@ function ComposePage({ me, other }) {
         >
           Envelope
         </button>
-        {showWaitMessage && (
-          <p
-            style={{
-              position: "absolute",
-              top: "-38%",
-              left: "18%",
-              width: "64%",
-              textAlign: "center",
-              fontSize: 12,
-              color: "#a94442",
-              background: "#fdf6d8",
-              padding: "4px 8px",
-              borderRadius: 4,
-              margin: 0,
-            }}
-          >
-            Waiting for the duck to come back...
-          </p>
-        )}
 
         <button
           onClick={handleTrash}

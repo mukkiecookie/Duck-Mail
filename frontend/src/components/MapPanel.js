@@ -155,8 +155,8 @@ function MapPanel({ me }) {
       >
         <div
           style={{
-            width: 140,
-            height: 44,
+            width: 168,
+            height: 46,
             background: `url(${badgeIcon})`,
             backgroundSize: "100% 100%",
             backgroundRepeat: "no-repeat",

@@ -10,6 +10,7 @@ import grassTile from "./assets/Grass.svg";
 import yellowButton from "./assets/Yellow_Button.svg";
 import DuckMailLogo from "./components/DuckMailLogo";
 import mailboxClosed from "./assets/Mail_Box_Closed.png";
+import duckIcon from "./assets/TopRow_Duck.svg";
 
 import mailFrame1 from "./assets/Mail_Man_Duck_Frame_1.png";
 import mailFrame2 from "./assets/Mail_Man_Duck_Frame_2.png";
@@ -32,6 +33,8 @@ const returnWalkFrames = [returnFrame1, returnFrame2, returnFrame3, returnFrame4
 
 const USERS = ["Mukul", "Chandhini"];
 
+const API_URL = "https://letters-app-am1z.onrender.com";
+
 function App() {
   const [me, setMe] = useState(() => localStorage.getItem("letterAppUser") || null);
 
@@ -39,6 +42,7 @@ function App() {
   const [walkFrame, setWalkFrame] = useState(0);
   const [isReturning, setIsReturning] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [backendReady, setBackendReady] = useState(false);
 
   const mailboxIsOpen = walkProgress >= 1;
 
@@ -91,6 +95,57 @@ function App() {
     localStorage.removeItem("letterAppUser");
     setMe(null);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const pingBackend = async () => {
+      try {
+        const res = await fetch(`${API_URL}/letters?viewer=ping`);
+        if (res.ok && !cancelled) {
+          setBackendReady(true);
+          return;
+        }
+      } catch (e) {
+        // backend not awake yet, ignore and retry
+      }
+      if (!cancelled) {
+        setTimeout(pingBackend, 1500);
+      }
+    };
+
+    pingBackend();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!backendReady) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          width: "100vw",
+          background: "#f0eee9",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Minecraft, sans-serif",
+        }}
+      >
+        <img
+          src={duckIcon}
+          alt="Loading"
+          style={{
+            width: 64,
+            height: 64,
+            animation: "duckBounce 0.6s ease-in-out infinite",
+          }}
+        />
+        <p style={{ marginTop: 20, fontSize: 16 }}>Quack Quack Quack...</p>
+      </div>
+    );
+  }
 
   if (!me) {
     return (

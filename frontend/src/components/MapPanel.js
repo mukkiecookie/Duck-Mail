@@ -90,7 +90,6 @@ function MapPanel({ me, onOpenLetter }) {
   const [tracked, setTracked] = useState([]);
   const [unseenNewLetter, setUnseenNewLetter] = useState(false);
   const [holder, setHolder] = useState(null);
-  const [setPreviewLetter] = useState(null);
   const mapRef = useRef(null);
 
   useEffect(() => {

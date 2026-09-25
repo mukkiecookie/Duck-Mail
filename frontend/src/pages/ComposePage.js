@@ -20,18 +20,6 @@ function ComposePage({ me, other, customStamps, onStampUploaded }) {
   const [showEnvelope, setShowEnvelope] = useState(false);
   const [sending, setSending] = useState(false);
 
-  {
-    showEnvelope && (
-      <EnvelopeModal
-        onSend={(stampIndex) => handleSend(stampIndex)}
-        onBack={() => setShowEnvelope(false)}
-        sending={sending}
-        customStamps={customStamps}
-        onStampUploaded={onStampUploaded}
-      />
-    )
-  }
-
   const openEnvelope = () => {
     if (!content.trim()) return;
     setShowEnvelope(true);
@@ -178,14 +166,17 @@ function ComposePage({ me, other, customStamps, onStampUploaded }) {
         </button>
       </div>
 
-      {showEnvelope && (
-        <EnvelopeModal
-          onSend={(stampIndex) => handleSend(stampIndex)}
-          onBack={() => setShowEnvelope(false)}
-          sending={sending}
-          customStamps={customStamps}
-        />
-      )}
+      {
+        showEnvelope && (
+          <EnvelopeModal
+            onSend={(stampIndex) => handleSend(stampIndex)}
+            onBack={() => setShowEnvelope(false)}
+            sending={sending}
+            customStamps={customStamps}
+            onStampUploaded={onStampUploaded}
+          />
+        )
+      }
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import crossButton from "../assets/Cross_Button.svg";
 import arrowIcon from "../assets/Arrow.svg";
 import peachButton from "../assets/Peach_Button.svg";

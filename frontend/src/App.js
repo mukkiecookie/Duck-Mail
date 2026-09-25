@@ -35,6 +35,21 @@ const USERS = ["Mukul", "Chandhini"];
 
 const API_URL = "https://letters-app-am1z.onrender.com";
 
+const DUCK_FACTS = [
+  "Ducks internal temperature is 107 degrees.",
+  "Ducks need at least one bestfriend. They get very stressed when they\u2019re separated from the others.",
+  "Female ducks are called ducks and males are called drakes.",
+  "Ducks can eat lots of different foods, even slugs.",
+  "Male ducks don't quack. They hiss. Females quack and chuckle.",
+  "Baby ducks are made waterproof by their mom.",
+  "Duck egg shells are tougher than chicken egg shells.",
+  "Some pet ducks wear diapers so they can visit inside the house.",
+  "Some drakes change color depending on the season.",
+  "Most pet ducks can\u2019t fly because they\u2019re too heavy.",
+  "Ducks have toenails on their feet, even though their feet are webbed.",
+  "Muscovy ducks wag their tails like dogs.",
+];
+
 function App() {
   const [me, setMe] = useState(() => localStorage.getItem("letterAppUser") || null);
 
@@ -43,6 +58,9 @@ function App() {
   const [isReturning, setIsReturning] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [backendReady, setBackendReady] = useState(false);
+  const [duckFact] = useState(
+    () => DUCK_FACTS[Math.floor(Math.random() * DUCK_FACTS.length)]
+  );
 
   const mailboxIsOpen = walkProgress >= 1;
 
@@ -142,7 +160,9 @@ function App() {
             animation: "duckBounce 0.6s ease-in-out infinite",
           }}
         />
-        <p style={{ marginTop: 20, fontSize: 16 }}>Quack Quack Quack...</p>
+        <p style={{ marginTop: 20, fontSize: 16, maxWidth: "60vw", textAlign: "center", lineHeight: 1.6 }}>
+          <strong>Did You Know:</strong> {duckFact}
+        </p>
       </div>
     );
   }
